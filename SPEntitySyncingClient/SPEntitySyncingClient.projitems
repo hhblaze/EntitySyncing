@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>622b0f24-20b2-4c40-8675-dee9c6b71646</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>SPEntitySyncingClient</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Engine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EntitySyncingBaseV1.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ESyncResult.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HttpCapsule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ISyncEntity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)JsonSimple.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Logger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProtobufSerializer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SyncOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SyncStrategyV1.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SyncStrategy.cs" />
+  </ItemGroup>
+</Project>

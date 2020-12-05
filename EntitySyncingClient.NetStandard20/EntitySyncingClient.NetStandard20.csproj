@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>EntitySyncingClient</RootNamespace>
+    <AssemblyName>EntitySyncingClient</AssemblyName>
+  </PropertyGroup>
+
+  <Import Project="..\SPEntitySyncingClient\SPEntitySyncingClient.projitems" Label="Shared" />
+
+  <ItemGroup>
+    <PackageReference Include="DBreeze" Version="1.95.0" />
+    <PackageReference Include="protobuf-net" Version="2.4.1" />
+  </ItemGroup>
+
+</Project>
