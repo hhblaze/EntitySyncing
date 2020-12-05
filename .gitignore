@@ -1,0 +1,14 @@
+/packages
+/.vs
+/EntitySyncing.Net5/obj
+/EntitySyncing.Net5/bin
+/EntitySyncing.NetStandard20/obj
+/EntitySyncing.NetStandard20/bin
+/EntitySyncingClient.Net5/bin
+/EntitySyncingClient.Net5/obj
+/EntitySyncingClient.NetStandard20/bin
+/EntitySyncingClient.NetStandard20/obj
+/EntitySyncingClientTester/bin
+/EntitySyncingClientTester/obj
+/EntitySyncingTester/obj
+/EntitySyncingTester/bin
