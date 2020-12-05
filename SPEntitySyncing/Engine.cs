@@ -234,19 +234,7 @@ namespace EntitySyncing
                     newServerSync = syncTimestamp;
 
                     if (syncDirection != eSynchroDirectionType.FromClient)
-                    {
-                        //if (entitySync.entityTable == "2t35")
-                        //{
-                        //    Console.WriteLine(entitySync.entityTable + " st count:" + st.Count() + " LastServerSyncTimeStamp " + new DateTime(LastServerSyncTimeStamp).ToString("dd.MM.yyyy HH:mm:ss"));
-                        //}
-                        ////foreach (var row in tran.SelectForward<byte[], byte[]>(entitySync.entityTable))
-                        ////{
-                        ////    Console.WriteLine(row.Key.ToBytesString());
-                        ////}
-
-                        ////var ttrt = new byte[] { 201 }.ConcatMany((LastServerSyncTimeStamp + 1).To_8_bytes_array_BigEndian(), long.MinValue.To_8_bytes_array_BigEndian());
-                        ////Console.WriteLine(ttrt.ToBytesString());
-
+                    {                      
 
                         foreach (var row in
                             tran.SelectForwardFromTo<byte[], byte[]>(entitySync.entityTable,
@@ -254,8 +242,7 @@ namespace EntitySyncing
                             true, //but LastServerSyncTimeStamp+1 is used
                             new byte[] { 201 }.ConcatMany(long.MaxValue.To_8_bytes_array_BigEndian(), long.MaxValue.To_8_bytes_array_BigEndian()),
                             true
-                            ))
-                        //foreach (var row in st.SelectForwardStartFrom<long, long>(LastServerSyncTimeStamp, false))
+                            ))                        
                         {
                             if (srvSyncList.Count >= limitationOfEntitesPerRound)
                             {
@@ -322,23 +309,10 @@ namespace EntitySyncing
 
                 Dictionary<string, byte[]> toClient = new Dictionary<string, byte[]>();
 
-                //if (entitySync.entityTable == "2t35")
-                //{
-                //    Console.WriteLine("task sync: {0} newServerSync-> ", new DateTime(newServerSync).ToString("dd.MM.yyyy HH:mm:ss"));
-                //}
+              
                 toClient.Add("NewServerSyncTimeStamp", newServerSync.To_8_bytes_array_BigEndian());
                 toClient.Add("RepeatSynchro", (repeatSynchro) ? new byte[] { 1 } : new byte[] { 0 });
                 toClient.Add("SyncLst", returnBackOperations.Values.ToList().SerializeProtobuf());
-
-                //XTEST
-                //if (entitySync.GetType() == typeof(GM_PersonalDevice.SyncTask))
-                //{
-                //    if (returnBackOperations.Values.Count<1)
-                //    {
-
-                //    }                    
-                //}
-                //EOF XTEST
 
                 httpCapsule.Body = toClient.SerializeProtobuf();
             }

@@ -30,7 +30,7 @@ namespace EntitySyncingClient
         }
 
         protected DBreeze.Transactions.Transaction tran = null;
-        protected string entityTable = "";
+        public string entityTable = "";
         public byte[] refToValueDataBlockWithFixedAddress = null;
 
         /// <summary>

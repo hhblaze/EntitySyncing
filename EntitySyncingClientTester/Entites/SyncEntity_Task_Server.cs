@@ -46,6 +46,12 @@ namespace EntitySyncingClientTester
             //return base.OnInsertEntity(entityKey, entity, oldEntity, newEntitySyncTimestamp);
             entity.SyncTimestamp = newEntitySyncTimestamp;
 
+            if(oldEntity == null)
+            {
+                //New Entity, giving it new ID
+               // entity.Id = newEntitySyncTimestamp;
+            }
+
             byte[] pBlob = null;
             pBlob = tran.InsertDataBlockWithFixedAddress<Entity_Task_Server>(this.entityTable, pBlob, entity); //Entity is stored in the same table
 

@@ -157,7 +157,7 @@ namespace EntitySyncingClient
 
             public object Instance = null;
 
-            public string Table;
+           // public string Table;
 
             public Task<ESyncResult> Sync()
             {
@@ -171,7 +171,7 @@ namespace EntitySyncingClient
         /// <typeparam name="T"></typeparam>
         /// <param name="table"></param>
         /// <param name="entity"></param>
-        public void AddSyncEntityV1<T>(string table, EntitySyncingBaseV1 entity)
+        public void AddSyncEntityV1<T>(EntitySyncingBaseV1 entity)
         {
             if (lstToSync.ContainsKey(typeof(T).ToString()))
                 return;
@@ -180,13 +180,13 @@ namespace EntitySyncingClient
             {
                 type = typeof(T),
                 entity = entity,
-                Table = table
+               // Table = table
             };
 
             
             Type openGenericClass = typeof(SyncStrategyV1<>);
             Type dynamicClosedGenericClass = openGenericClass.MakeGenericType(igo.type);
-            igo.Instance = Activator.CreateInstance(dynamicClosedGenericClass, table, entity);
+            igo.Instance = Activator.CreateInstance(dynamicClosedGenericClass, entity);
             //igo.SyncEntity = dynamicClosedGenericClass.GetMethod("SyncEntityWithUID");           
             igo.SyncEntity = dynamicClosedGenericClass.GetMethod("SyncEntityWithUID");
 

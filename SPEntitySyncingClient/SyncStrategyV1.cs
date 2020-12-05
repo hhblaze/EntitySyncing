@@ -19,7 +19,7 @@ namespace EntitySyncingClient
 
         private EntitySyncingBaseV1 _entitySync;
 
-        public SyncStrategyV1(string entityTable, EntitySyncingBaseV1 entitySync) : base(entityTable)
+        public SyncStrategyV1(EntitySyncingBaseV1 entitySync):base(entitySync.entityTable)
         {            
             _entitySync = entitySync;
             this._urlSync = entitySync.UrlSync;

@@ -71,12 +71,12 @@ namespace EntitySyncingClientTester
 
             //!!!!!!! Add entity table also inside of SyncEntity_Task
             //Adding entites to be synced
-            SyncEngineClient.AddSyncEntityV1<Entity_Task_Client>("Task1", new SyncEntity_Task_Client() { UrlSync = "/modules.http.GM_PersonalDevice/IDT_Actions" });
+            SyncEngineClient.AddSyncEntityV1<Entity_Task_Client>(new SyncEntity_Task_Client() { UrlSync = "/modules.http.GM_PersonalDevice/IDT_Actions", entityTable = "Task1" });
 
         }
 
         /// <summary>
-        /// Emulates giving entity to server
+        /// Emulates sending entity to server and returning back an aswer from the server
         /// </summary>
         /// <param name="page"></param>
         /// <param name="type"></param>
@@ -94,7 +94,8 @@ namespace EntitySyncingClientTester
             var capsOut = SyncEngine.SyncEntityV1<Entity_Task_Server>(capsIn, new SyncEntity_Task_Server() { 
                 entityTable = "TaskSyncUser1" 
             }
-            , new byte[] { 1, 1, 1, 1 }, EntitySyncing.eSynchroDirectionType.Both, true);
+            , new byte[] { 1, 1, 1, 1 }, 
+            EntitySyncing.eSynchroDirectionType.Both, true); //new byte[] { 1, 1, 1, 1 } is user
 
             return new EntitySyncingClient.HttpCapsule { 
                 Body = capsOut.Body,
@@ -120,7 +121,11 @@ namespace EntitySyncingClientTester
 
 
 
-
+        /// <summary>
+        /// Insert server
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button2_Click(object sender, EventArgs e)
         {
             DateTime now = DateTime.UtcNow;
@@ -180,7 +185,11 @@ namespace EntitySyncingClientTester
             return counter;
         }
 
-
+        /// <summary>
+        /// Insert client
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button3_Click(object sender, EventArgs e)
         {
             DateTime now = DateTime.UtcNow;
@@ -191,7 +200,8 @@ namespace EntitySyncingClientTester
             Entity_Task_Client entity = new Entity_Task_Client()
             {
                 Description = "cl1   " + now.Ticks,
-                Id = now.Ticks,
+                //Id = now.Ticks,
+                Id = 1,
                 SyncTimestamp = now.Ticks
             };
             using (var tran = DBEngineClient.GetTransaction())
