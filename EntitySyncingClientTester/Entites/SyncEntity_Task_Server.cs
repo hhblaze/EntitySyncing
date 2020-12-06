@@ -18,7 +18,7 @@ namespace EntitySyncingClientTester
         //string mcTbl = "";
         //long companyId = -1;
 
-        public override void Init(DBreeze.Transactions.Transaction tran, List<SyncOperation> syncOperations, object user, string TopicName = "")
+        public override void Init()
             
         {
             //// EXAMPLE
@@ -31,7 +31,7 @@ namespace EntitySyncingClientTester
             //this.mcTbl = "PowerEntity_" + typeof(GM_IDoThings.TaskDescriptionTemplate).Name;
             //this.tblText = "PowerEntityText_" + typeof(GM_IDoThings.TaskDescriptionTemplate).Name + "_" + user.CompanyId;
 
-            base.Init(tran, syncOperations, user);
+            //base.Init(tran, syncOperations, user);
 
             //List<string> tbls = new List<string>();
             //tbls.Add(this.entityTable);
@@ -51,7 +51,7 @@ namespace EntitySyncingClientTester
 
             
             //this.entityValueTable in case if entity content is stored in the other table then indexes for sync operations
-            this.refToValueDataBlockWithFixedAddress = tran.InsertDataBlockWithFixedAddress<Entity_Task_Server>(this.entityTable, this.refToValueDataBlockWithFixedAddress, entity); //Entity is stored in the same table
+            this.ptrContent = tran.InsertDataBlockWithFixedAddress<Entity_Task_Server>(this.entityTable, this.ptrContent, entity); //Entity is stored in the same table
 
             //Sync indexes will be handled automatically if return true, also based on entity and this.refToValueDataBlockWithFixedAddress value
 

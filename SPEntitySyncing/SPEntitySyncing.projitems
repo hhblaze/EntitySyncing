@@ -16,5 +16,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Logger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProtobufSerializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SyncOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SyncStrategieV1.cs" />
   </ItemGroup>
 </Project>

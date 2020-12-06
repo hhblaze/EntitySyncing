@@ -71,7 +71,10 @@ namespace EntitySyncingClientTester
 
             //!!!!!!! Add entity table also inside of SyncEntity_Task
             //Adding entites to be synced
-            SyncEngineClient.AddEntity4Sync<Entity_Task>(new SyncEntity_Task_Client() { UrlSync = "/modules.http.GM_PersonalDevice/IDT_Actions", entityTable = "Task1" });
+            SyncEngineClient.AddEntity4Sync<Entity_Task>(new SyncEntity_Task_Client() { 
+                urlSync = "/modules.http.GM_PersonalDevice/IDT_Actions", 
+                entityTable = "Task1" 
+            });
 
         }
 
@@ -161,7 +164,7 @@ namespace EntitySyncingClientTester
                 byte[] pBlob = null;
                 pBlob = tran.InsertDataBlockWithFixedAddress<Entity_Task>(table, pBlob, entity); //Entity is stored in the same table
 
-                SyncEngineClient.InsertIndex4Sync(tran, table, entity, pBlob, null);                
+                EntitySyncingClient.SyncStrategyV1<Entity_Task>.InsertIndex4Sync(tran, table, entity, pBlob, null);                
 
                 tran.Commit();
             }
@@ -218,7 +221,7 @@ namespace EntitySyncingClientTester
                     tran.InsertDataBlockWithFixedAddress<Entity_Task>(table, row.Value, newEnt); //Entity is stored in the same table
 
 
-                    SyncEngineClient.InsertIndex4Sync(tran, table, newEnt, row.Value, oldEnt);
+                    EntitySyncingClient.SyncStrategyV1 <Entity_Task>.InsertIndex4Sync(tran, table, newEnt, row.Value, oldEnt);
                     //tran.Insert<byte[], byte[]>(table, 200.ToIndex(ent.Id), pBlob); 
                     //tran.Insert<byte[], byte[]>(table, 201.ToIndex(ent.SyncTimestamp, ent.Id), row.Value);
 
@@ -257,8 +260,8 @@ namespace EntitySyncingClientTester
                 Entity_Task_Server entity = new Entity_Task_Server()
                 {
                     Description = "w1 " + now.Ticks,
-                    Id = 1,
-                    //Id = now.Ticks,
+                    //Id = 1,
+                    Id = now.Ticks,
                     SyncTimestamp = now.Ticks
                 };
 

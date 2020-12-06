@@ -43,7 +43,8 @@ namespace EntitySyncingClient
         internal Action _resetWebSession = null;
         internal Action _syncIsFinishing = null;
 
-        Dictionary<string, EntityFold> lstToSync = new Dictionary<string, EntityFold>();
+        //Dictionary<string, EntityFold> lstToSync = new Dictionary<string, EntityFold>();
+        Dictionary<string, IEntityFold> lstToSync = new Dictionary<string, IEntityFold>();
 
 
         public Engine(ILogger logger, DBreeze.DBreezeEngine dbEngine, Func<string, string, object, Task<HttpCapsule>> serverSender, Action resetWebSession, Action syncIsFinishing)
@@ -69,29 +70,36 @@ namespace EntitySyncingClient
             SyncProcess?.Invoke(System.Threading.Interlocked.Read(ref SyncOperationsCount));
         }
 
-        /// <summary>
-        /// Fills up index 200. Creation of transaction, synchronization of the table and transaction commit is outside of this function.
-        /// Entity desired ID and SyncTimestamp must be specified
-        /// </summary>
-        /// <param name="table">Where must be stored index 200</param>
-        /// <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
-        /// <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
-        /// <param name="oldEntity">old instance of the entity from DB</param>
-        public void InsertIndex4Sync(DBreeze.Transactions.Transaction tran, string table, ISyncEntity entity, byte[] ptrEntityContent, ISyncEntity oldEntity)
-        {
-            if(oldEntity == null)
-                tran.Insert<byte[], byte[]>(table, 200.ToIndex(entity.Id), ptrEntityContent);
+        
 
-            //Adding to value one byte (17) indicating that this is a new entity
-            tran.Insert<byte[], byte[]>(table, 201.ToIndex(entity.SyncTimestamp, entity.Id), (oldEntity == null) ? new byte[] { 1 } : null);
+        ///// <summary>
+        ///// Fills up index 200. Creation of transaction, synchronization of the table and transaction commit is outside of this function.
+        ///// Entity desired ID and SyncTimestamp must be specified
+        ///// </summary>
+        ///// <param name="table">Where must be stored index 200</param>
+        ///// <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
+        ///// <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
+        ///// <param name="oldEntity">old instance of the entity from DB</param>
+        //public void InsertIndex4Sync(DBreeze.Transactions.Transaction tran, string table, ISyncEntity entity, byte[] ptrEntityContent, ISyncEntity oldEntity)
+        //{
+        //    if(oldEntity == null)
+        //        tran.Insert<byte[], byte[]>(table, 200.ToIndex(entity.Id), ptrEntityContent);
+
+        //    //Adding to value one byte (17) indicating that this is a new entity
+        //    tran.Insert<byte[], byte[]>(table, 201.ToIndex(entity.SyncTimestamp, entity.Id), (oldEntity == null) ? new byte[] { 1 } : null);
+        //}
+
+        interface IEntityFold
+        {
+            Task<ESyncResult> Sync();
         }
 
 
-        class EntityFold
+        class EntityFold<T>:IEntityFold
         {
             public Type type = null;
 
-            public EntitySyncingBaseV1 entity = null;
+            public EntitySyncingBaseV1<T> entity = null;
 
             public MethodInfo SyncEntity = null;
 
@@ -111,20 +119,21 @@ namespace EntitySyncingClient
         /// <typeparam name="T"></typeparam>
         /// <param name="table"></param>
         /// <param name="entity"></param>
-        public void AddEntity4Sync<T>(EntitySyncingBaseV1 entity)
+        public void AddEntity4Sync<T>(EntitySyncingBaseV1<T> entity)
         {
             if (lstToSync.ContainsKey(typeof(T).ToString()))
                 return;
 
             entity.SyncingEngine = this;
 
-            EntityFold igo = new EntityFold()
+            EntityFold<T> igo = new EntityFold<T>()
             {
                 type = typeof(T),
                 entity = entity,
             };
 
-            
+            //Here SyncStrategyV1 will be used
+
             Type openGenericClass = typeof(SyncStrategyV1<>);
             Type dynamicClosedGenericClass = openGenericClass.MakeGenericType(igo.type);
             igo.Instance = Activator.CreateInstance(dynamicClosedGenericClass, entity);                     
@@ -261,7 +270,7 @@ namespace EntitySyncingClient
         //    return mres;
         //}
 
-        async System.Threading.Tasks.Task<ESyncResult> Sync(EntityFold syncStrategy)
+        async System.Threading.Tasks.Task<ESyncResult> Sync(IEntityFold syncStrategy)
         {
             var mres = ESyncResult.ERROR;
             //while ((mres = await SyncEntityWithUID(syncStrategy)) == ESyncResult.REPEAT) ;

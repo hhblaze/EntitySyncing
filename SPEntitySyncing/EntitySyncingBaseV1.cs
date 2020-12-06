@@ -21,26 +21,34 @@ namespace EntitySyncing
         }
 
 
-        protected DBreeze.Transactions.Transaction tran = null;
+        public DBreeze.Transactions.Transaction tran = null;
         public string entityTable = "";
         /// <summary>
         /// In case if value of the entity differs from the table where synchronizer holds data
         /// </summary>
-        public string entityValueTable = "";
+        public string entityContentTable = "";
         /// <summary>
-        /// Is set by synchronizer, in case if entity exists, then must be set from onInsertEntityFunction after repeat insert
+        /// Is set by synchronizer, in case if entity exists, then must be set from onInsertEntityFunction after repeat insert, refToValueDataBlockWithFixedAddress
         /// </summary>
-        public byte[] refToValueDataBlockWithFixedAddress = null;
+        public byte[] ptrContent = null;
         //protected GccObjects.Net.UserManagement.GccUserRemoteView user = null;
-        protected object user = null;
+        public object userToken = null;
 
-        public long TopicId = 0; //In case if synchronization comes from the specific APP
-        public bool TopicIdDependantSync = false;
-
-        public virtual bool CheckTopicIdEntity(T entityValue)
+        /// <summary>
+        /// Chooses between entityContentTable and entityTable
+        /// </summary>
+        public string GetContentTable
         {
-            return true;
+            get { return String.IsNullOrEmpty(entityContentTable) ? entityTable : entityContentTable; }
         }
+
+        //public long TopicId = 0; //In case if synchronization comes from the specific APP
+        //public bool TopicIdDependantSync = false;
+
+        //public virtual bool CheckTopicIdEntity(T entityValue)
+        //{
+        //    return true;
+        //}
 
         /// <summary>
         /// Also responisble for Synchronize table, by default we synchronize only one master table, so we don't need extra tran.Synchronize tables
@@ -49,11 +57,12 @@ namespace EntitySyncing
         /// <param name="entityTable"></param>
         /// <param name="companyId"></param>
         /// <param name="syncOperations"></param>
-        public virtual void Init(DBreeze.Transactions.Transaction tran, List<SyncOperation> syncOperations, object user, string TopicName = "")
+        //public virtual void Init(DBreeze.Transactions.Transaction tran, List<SyncOperation> syncOperations, object user, string TopicName = "")
+        public virtual void Init()
         {
             //GccObjects.Net.UserManagement.GccUserRemoteView
-            this.tran = tran;
-            this.user = user;
+            //this.tran = tran;
+            //this.userToken = user;
         }
 
 

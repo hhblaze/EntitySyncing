@@ -5,29 +5,33 @@ using System.Text;
 using System.Threading.Tasks;
 
 using DBreeze.Utils;
-
+using EntitySyncingClient;
 
 namespace EntitySyncingClientTester
 {
-    class SyncEntity_Task_Client: EntitySyncingClient.EntitySyncingBaseV1
+    class SyncEntity_Task_Client: EntitySyncingClient.EntitySyncingBaseV1<Entity_Task>
     {
-        public override void Init(DBreeze.Transactions.Transaction tran, string entityTable)
+        public override void Init()
         {
-            base.Init(tran, entityTable);
+            //Available:
+            //this.tran
+            //this.entityTable
+            //this.GetContentTable
+            //this.SyncingEngine
+            //this.ptrContent
+
         }
 
-        public override void OnInsertEntity(long entityKey, object entityValue, object oldEntity, byte[] nonDeserializedEntity)
-        {
-            // base.OnInsertEntity(entityKey, entityValue, oldEntity, nonDeserializedEntity);
-            var entity = (Entity_Task)entityValue;
+        public override void OnInsertEntity(Entity_Task entity, Entity_Task oldEntity, byte[] nonDeserializedEntity)
+        {   
 
-            byte[] pBlob = null;
-            pBlob = tran.InsertDataBlockWithFixedAddress(this.entityTable, pBlob, entity); //Entity is stored in the same table
-
+            //That must be set first
+            this.ptrContent = tran.InsertDataBlockWithFixedAddress(this.entityTable, this.ptrContent, entity); //Entity is stored in the same table                        
             
-            tran.Insert<byte[], byte[]>(this.entityTable, 200.ToIndex(entity.Id), pBlob);
-            tran.Insert<byte[], byte[]>(this.entityTable, 201.ToIndex(entity.SyncTimestamp, entity.Id), pBlob);
+            //All sync indexes from here will be automatically filled up
         }
+
+        //more overrides are available
 
         //public override void OnEntitySyncIsFinished()
         //{

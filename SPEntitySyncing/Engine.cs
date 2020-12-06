@@ -73,7 +73,7 @@ namespace EntitySyncing
         /// <param name="entityMustBeReturnedBackToClientAfterCreation"></param>
         /// <param name="oneWaySynchronizerFromServer">only from server to client</param>
         /// <returns></returns>
-        public HttpCapsule SyncEntityV1<T>(HttpCapsule capsIn, EntitySyncingBaseV1<T> entitySync, object user,
+        public HttpCapsule SyncEntityV1<T>(HttpCapsule capsIn, EntitySyncingBaseV1<T> entitySync, object userToken,
             eSynchroDirectionType syncDirection = eSynchroDirectionType.Both, bool entityMustBeReturnedBackToClientAfterCreation = false)
         {//SynchronizeEntityWithUID_V2
             HttpCapsule httpCapsule = new HttpCapsule();
@@ -113,7 +113,10 @@ namespace EntitySyncing
                 using (var tran = DBEngine.GetTransaction())
                 {
                     //entitySync.SetSyncEntitesList(syncLst);
-                    entitySync.Init(tran, syncLst, user);
+                    entitySync.tran = tran;
+                    entitySync.userToken = userToken;
+                    entitySync.Init();
+                    //entitySync.Init(tran, syncLst, user);
 
                     //Synchronization of tables is inside of Init                   
 
@@ -158,7 +161,7 @@ namespace EntitySyncing
 
                                         //Possible update
                                         //existingEntity = rowExistingEntity.Value;
-                                        entitySync.refToValueDataBlockWithFixedAddress = rowExistingEntity.Value;
+                                        entitySync.ptrContent = rowExistingEntity.Value;
                                         existingEntity = tran.SelectDataBlockWithFixedAddress<T>(entitySync.entityTable, rowExistingEntity.Value);
 
                                         if (((ISyncEntity)existingEntity).SyncTimestamp >= row.SyncTimestamp)
@@ -220,7 +223,7 @@ namespace EntitySyncing
 
                                         //Insert new 
                                         newEntity = row.SerializedObject.DeserializeProtobuf<T>();
-                                        entitySync.refToValueDataBlockWithFixedAddress = null;
+                                        entitySync.ptrContent = null;
 
                                         //We want to leave timestamp from client if server time less then clients, for new items only
                                         if (syncTimestamp <= row.SyncTimestamp)
@@ -255,10 +258,9 @@ namespace EntitySyncing
                                             {
                                                 //entitySync.refToValueDataBlockWithFixedAddress must be filled after calling OnInsertEntity
 
-                                                tran.Insert<byte[], byte[]>(entitySync.entityTable, 200.ToIndex(((ISyncEntity)newEntity).Id), entitySync.refToValueDataBlockWithFixedAddress);
+                                                tran.Insert<byte[], byte[]>(entitySync.entityTable, 200.ToIndex(((ISyncEntity)newEntity).Id), entitySync.ptrContent);
 
-                                                tran.Insert<byte[], byte[]>(entitySync.entityTable, 201.ToIndex(((ISyncEntity)newEntity).SyncTimestamp, ((ISyncEntity)newEntity).Id),
-                                                    row.InternalId.To_8_bytes_array_BigEndian());
+                                                tran.Insert<byte[], byte[]>(entitySync.entityTable, 201.ToIndex(((ISyncEntity)newEntity).SyncTimestamp, ((ISyncEntity)newEntity).Id), null);
                                             }
 
                                             //tran.Insert<byte[], byte[]>(entitySync.entityTable, new byte[] { 201 }.ConcatMany(

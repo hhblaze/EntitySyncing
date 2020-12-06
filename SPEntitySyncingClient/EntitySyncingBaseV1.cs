@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
+using DBreeze.Utils;
+
 namespace EntitySyncingClient
 {
-    public abstract class EntitySyncingBaseV1
+    public abstract class EntitySyncingBaseV1<T>
     {
         /// <summary>
         /// 
@@ -14,7 +16,7 @@ namespace EntitySyncingClient
         /// <param name="entityValue"></param>
         /// <param name="oldEntity"></param>
         /// <param name="nonDeserializedEntity">Very important save exactly this entity, because it must have more properties then not updated client</param>
-        public virtual void OnInsertEntity(long entityKey, object entityValue, object oldEntity, byte[] nonDeserializedEntity)
+        public virtual void OnInsertEntity(T entity, T oldEntity, byte[] nonDeserializedEntity)
         {
 
         }
@@ -29,30 +31,37 @@ namespace EntitySyncingClient
 
         }
 
-        protected DBreeze.Transactions.Transaction tran = null;
+        public DBreeze.Transactions.Transaction tran = null;
         public string entityTable = "";
         /// <summary>
-        /// In case if value of the entity differs from the table where synchronizer holds data
+        /// In case if value of the entity differs from the table where synchronizer holds data (refToValueDataBlockWithFixedAddress)
         /// </summary>
-        public string entityValueTable = "";
-        public byte[] refToValueDataBlockWithFixedAddress = null;
+        public string entityContentTable = "";
+        public byte[] ptrContent = null;
+
         public EntitySyncingClient.Engine SyncingEngine = null;
 
+        /// <summary>
+        /// Chooses between entityContentTable and entityTable
+        /// </summary>
         public string GetContentTable
         {
-            get { return String.IsNullOrEmpty(entityValueTable) ? entityTable : entityValueTable; }
+            get { return String.IsNullOrEmpty(entityContentTable) ? entityTable : entityContentTable; }
         }
 
         /// <summary>
         /// Example "/modules.http.GM_PersonalDevice/IDT_Actions"
         /// </summary>
-        public string UrlSync = String.Empty;
+        public string urlSync = String.Empty;
 
-        public virtual void Init(DBreeze.Transactions.Transaction tran, string entityTable)
+        //public virtual void Init(DBreeze.Transactions.Transaction tran)
+        public virtual void Init()
         {
-            this.tran = tran;
-            this.entityTable = entityTable;
+            //this.tran = tran;
+            //this.entityTable = entityTable;
         }
+
+
 
     }
 }
