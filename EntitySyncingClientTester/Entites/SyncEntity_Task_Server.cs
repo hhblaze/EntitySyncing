@@ -21,17 +21,14 @@ namespace EntitySyncingClientTester
         public override void Init()
             
         {
-            //// EXAMPLE
+            //Available:
+            //this.tran
+            //this.entityTable
+            //this.GetContentTable
+            //this.SyncingEngine
+            //this.ptrContent
 
-            ////this.entityTable = "7DescriptionTemplates" + user.CompanyId;
-
-            ////EntityGroupName is taken from function initTps()
-            //this.companyId = user.CompanyId;
-            //this.entityTable = "PowerEntity_" + typeof(GM_IDoThings.TaskDescriptionTemplate).Name + "_" + user.CompanyId;
-            //this.mcTbl = "PowerEntity_" + typeof(GM_IDoThings.TaskDescriptionTemplate).Name;
-            //this.tblText = "PowerEntityText_" + typeof(GM_IDoThings.TaskDescriptionTemplate).Name + "_" + user.CompanyId;
-
-            //base.Init(tran, syncOperations, user);
+            //Here extra DBreeze transaction tables can be synchronized (this.entityTable and probably this.entityContentTable (if it differes) must be also added in the SynchronizeTables)
 
             //List<string> tbls = new List<string>();
             //tbls.Add(this.entityTable);

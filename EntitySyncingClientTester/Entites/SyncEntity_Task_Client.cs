@@ -20,6 +20,14 @@ namespace EntitySyncingClientTester
             //this.SyncingEngine
             //this.ptrContent
 
+            //Here extra DBreeze transaction tables can be synchronized (this.entityTable and probably this.entityContentTable (if it differes) must be also added in the SynchronizeTables)
+
+            //List<string> tbls = new List<string>();
+            //tbls.Add(this.entityTable);
+            //tbls.Add(tblText);
+
+            //tran.SynchronizeTables(tbls);
+
         }
 
         public override void OnInsertEntity(Entity_Task entity, Entity_Task oldEntity, byte[] nonDeserializedEntity)

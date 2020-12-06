@@ -37,7 +37,7 @@ namespace EntitySyncing
         /// <summary>
         /// Chooses between entityContentTable and entityTable
         /// </summary>
-        public string GetContentTable
+        public string GetEntityContentTable
         {
             get { return String.IsNullOrEmpty(entityContentTable) ? entityTable : entityContentTable; }
         }

@@ -146,12 +146,11 @@ namespace EntitySyncingClient
                             var oldEntity = rowLocalEntity.GetDataBlockWithFixedAddress<T>();
 
                             //Setting value from the server to this ID
-                            tran.InsertDataBlockWithFixedAddress<byte[]>(_entitySync.GetContentTable, rowLocalEntity.Value, opr.SerializedObject);
+                            tran.InsertDataBlockWithFixedAddress<byte[]>(_entitySync.GetEntityContentTable, rowLocalEntity.Value, opr.SerializedObject);
                             
                             //New GeneratedID must be stored for the new sync
                             ((ISyncEntity)oldEntity).Id = opr.ExternalId; //Theoretically on this place can be called a user-function to get another ID type
-                            ((ISyncEntity)oldEntity).SyncTimestamp = ++now;
-                           // byte[] ptrContent = tran.InsertDataBlockWithFixedAddress<T>(_entitySync.GetContentTable, null, oldEntity);
+                            ((ISyncEntity)oldEntity).SyncTimestamp = ++now;                   
 
                             _entitySync.OnInsertEntity(oldEntity, default(T), oldEntity.SerializeProtobuf());
 
@@ -273,7 +272,7 @@ namespace EntitySyncingClient
                     var newServerSyncTimeStamp = fromServer["NewServerSyncTimeStamp"].To_Int64_BigEndian();
 
                     if(SyncEngine.Verbose)
-                        Console.WriteLine($"SyncEntityWithUID<{ typeof(T).Name }> ::: server returned {syncListFromServer.Count} items.");
+                        Console.WriteLine($"SyncEntity<{ typeof(T).Name }> ::: server returned {syncListFromServer.Count} items.");
 
                     if(this.UpdateLocalDatabase(syncListFromServer, newServerSyncTimeStamp))
                     {
@@ -304,7 +303,7 @@ namespace EntitySyncingClient
             }
 
             if (SyncEngine.Verbose)
-                Console.WriteLine($"SyncEntityWithUID<{ typeof(T).Name }> ::: finished");
+                Console.WriteLine($"SyncEntity<{ typeof(T).Name }> ::: finished");
 
             return ESyncResult.OK;
         }
