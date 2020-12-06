@@ -19,7 +19,7 @@ namespace EntitySyncing
         {
             return true;
         }
-
+         
 
         public DBreeze.Transactions.Transaction tran = null;
         public string entityTable = "";
