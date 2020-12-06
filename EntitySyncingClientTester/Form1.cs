@@ -29,8 +29,8 @@ namespace EntitySyncingClientTester
             }
         }
 
-        EntitySyncingClient.Engine SyncEngineClient = null;
-        EntitySyncing.Engine SyncEngine = null;
+        public static EntitySyncingClient.Engine SyncEngineClient = null;
+        public static EntitySyncing.Engine SyncEngine = null;
 
         EntitySyncingClient.ILogger LoggerClient = null;
         EntitySyncing.ILogger Logger = null;
@@ -71,7 +71,7 @@ namespace EntitySyncingClientTester
 
             //!!!!!!! Add entity table also inside of SyncEntity_Task
             //Adding entites to be synced
-            SyncEngineClient.AddSyncEntityV1<Entity_Task_Client>(new SyncEntity_Task_Client() { UrlSync = "/modules.http.GM_PersonalDevice/IDT_Actions", entityTable = "Task1" });
+            SyncEngineClient.AddEntity4Sync<Entity_Task>(new SyncEntity_Task_Client() { UrlSync = "/modules.http.GM_PersonalDevice/IDT_Actions", entityTable = "Task1" });
 
         }
 
@@ -103,7 +103,6 @@ namespace EntitySyncingClientTester
             };
         }
 
-
         private void button1_Click(object sender, EventArgs e)
         {
             this.InitSyncEngine();
@@ -113,60 +112,10 @@ namespace EntitySyncingClientTester
 
         async Task Run()
         {
-         
-
-
             await SyncEngineClient.SynchronizeEntities();
         }
 
-
-
-        /// <summary>
-        /// Insert server
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void button2_Click(object sender, EventArgs e)
-        {
-            DateTime now = DateTime.UtcNow;
-            string table = "TaskSyncUser1";
-
-            InitDBEngines();
-
-            //Adding task 
-            using (var tran = DBEngine.GetTransaction())
-            {
-
-
-                //foreach(var row in tran.SelectForward<byte[],byte[]>(table))
-                //{
-                //    Console.WriteLine(row.Key.ToBytesString());
-                //}
-
-
-
-                //var cnt = GetTableCounterLong(tran, table, new byte[] { 1 });
-
-                Entity_Task_Server entity = new Entity_Task_Server()
-                {
-                    Description = "w1 " + now.Ticks,
-                    //Id = cnt,
-                    Id = now.Ticks,
-                    SyncTimestamp = now.Ticks
-                };
-
-                
-                byte[] pBlob = null;
-                pBlob = tran.InsertDataBlockWithFixedAddress<Entity_Task_Server>(table, pBlob, entity); //Entity is stored in the same table
-                
-
-                tran.Insert<byte[], byte[]>(table, 200.ToIndex(entity.Id), pBlob);
-                tran.Insert<byte[], byte[]>(table, 201.ToIndex(now.Ticks, entity.Id), pBlob);
-
-                tran.Commit();
-            }
-        }
-
+      
 
         long GetTableCounterLong(DBreeze.Transactions.Transaction tran, string table, byte[] counterAddress)
         {
@@ -185,6 +134,8 @@ namespace EntitySyncingClientTester
             return counter;
         }
 
+
+        #region "test client inserts"
         /// <summary>
         /// Insert client
         /// </summary>
@@ -192,14 +143,14 @@ namespace EntitySyncingClientTester
         /// <param name="e"></param>
         private void button3_Click(object sender, EventArgs e)
         {
+            this.InitSyncEngine();
+
             DateTime now = DateTime.UtcNow;
             string table = "Task1";
 
-            InitDBEngines();
-
-            Entity_Task_Client entity = new Entity_Task_Client()
+            Entity_Task entity = new Entity_Task()
             {
-                Description = "cl1   " + now.Ticks,
+                Description = "cl1 " + now.Ticks,
                 //Id = now.Ticks,
                 Id = 1,
                 SyncTimestamp = now.Ticks
@@ -208,11 +159,9 @@ namespace EntitySyncingClientTester
             {
 
                 byte[] pBlob = null;
-                pBlob = tran.InsertDataBlockWithFixedAddress<Entity_Task_Client>(table, pBlob, entity); //Entity is stored in the same table
+                pBlob = tran.InsertDataBlockWithFixedAddress<Entity_Task>(table, pBlob, entity); //Entity is stored in the same table
 
-
-                tran.Insert<byte[], byte[]>(table, 200.ToIndex(entity.Id), pBlob);
-                tran.Insert<byte[], byte[]>(table, 201.ToIndex(now.Ticks, entity.Id), pBlob);
+                SyncEngineClient.InsertIndex4Sync(tran, table, entity, pBlob, null);                
 
                 tran.Commit();
             }
@@ -232,16 +181,100 @@ namespace EntitySyncingClientTester
                 string table1 = "Task1";
                 foreach (var row in tran.SelectForward<byte[], byte[]>(table1))
                 {
-                    if (row.Key[0] != 200)
-                        continue;
+                    //if (row.Key[0] != 200)
+                    //    continue;
 
-                    var ent = tran.SelectDataBlockWithFixedAddress<Entity_Task_Client>(table1, row.Value);
-
-                    Console.WriteLine(row.Key.ToBytesString() + $"  ID: {row.Key.Substring(1,8).To_Int64_BigEndian()}; + { new DateTime(ent.SyncTimestamp).ToString("dd.MM.yyyy HH:mm:ss")}; {ent.Description} " );
+                    if (row.Key[0] == 200)
+                    {
+                        var ent = tran.SelectDataBlockWithFixedAddress<Entity_Task>(table1, row.Value);
+                        Console.WriteLine(row.Key.ToBytesString() + $"  ID: {row.Key.Substring(1, 8).To_Int64_BigEndian()}; + { new DateTime(ent.SyncTimestamp).ToString("dd.MM.yyyy HH:mm:ss")}; {ent.Description} ");
+                    }
+                    else
+                        Console.WriteLine(row.Key.ToBytesString() + "   ex");
                 }
             }
 
         }
+
+        private void UpdateClientID(long id)
+        {
+            InitDBEngines();
+            string table = "Task1";
+            DateTime now = DateTime.UtcNow;
+
+            using (var tran = DBEngineClient.GetTransaction())
+            {
+
+                var row = tran.Select<byte[], byte[]>(table, 200.ToIndex(id));
+                if (row.Exists)
+                {
+
+                    var oldEnt = tran.SelectDataBlockWithFixedAddress<Entity_Task>(table, row.Value);
+                    var newEnt = oldEnt.CloneProtobuf();
+
+                    newEnt.SyncTimestamp = now.Ticks;
+                    newEnt.Description = "cln desc from" + newEnt.SyncTimestamp;
+
+                    tran.InsertDataBlockWithFixedAddress<Entity_Task>(table, row.Value, newEnt); //Entity is stored in the same table
+
+
+                    SyncEngineClient.InsertIndex4Sync(tran, table, newEnt, row.Value, oldEnt);
+                    //tran.Insert<byte[], byte[]>(table, 200.ToIndex(ent.Id), pBlob); 
+                    //tran.Insert<byte[], byte[]>(table, 201.ToIndex(ent.SyncTimestamp, ent.Id), row.Value);
+
+                    tran.Commit();
+                }
+            }
+
+        }
+
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            UpdateClientID(Convert.ToInt64(textBox2.Text));
+        }
+        #endregion
+
+
+        #region "test server"
+        /// <summary>
+        /// Insert server
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button2_Click(object sender, EventArgs e)
+        {
+            InitSyncEngine();
+
+
+            DateTime now = DateTime.UtcNow;
+            string table = "TaskSyncUser1";
+
+            //Adding task 
+            using (var tran = DBEngine.GetTransaction())
+            {
+
+                Entity_Task_Server entity = new Entity_Task_Server()
+                {
+                    Description = "w1 " + now.Ticks,
+                    Id = 1,
+                    //Id = now.Ticks,
+                    SyncTimestamp = now.Ticks
+                };
+
+
+                byte[] pBlob = null;
+                pBlob = tran.InsertDataBlockWithFixedAddress<Entity_Task_Server>(table, pBlob, entity); //Entity is stored in the same table
+
+                SyncEngine.InsertIndex4Sync(tran, table, entity, pBlob, null);
+
+                //tran.Insert<byte[], byte[]>(table, 200.ToIndex(entity.Id), pBlob);
+                //tran.Insert<byte[], byte[]>(table, 201.ToIndex(entity.SyncTimestamp, entity.Id), pBlob);
+
+                tran.Commit();
+            }
+        }
+
 
         /// <summary>
         /// List server elements
@@ -256,45 +289,21 @@ namespace EntitySyncingClientTester
             {
                 string table1 = "TaskSyncUser1";
                 foreach (var row in tran.SelectForward<byte[], byte[]>(table1))
-                {
-                    if (row.Key[0] != 200)
-                        continue;
+                {                   
 
-                    var ent = tran.SelectDataBlockWithFixedAddress<Entity_Task_Server>(table1, row.Value);
-
-                    Console.WriteLine(row.Key.ToBytesString() + $"  ID: {row.Key.Substring(1, 8).To_Int64_BigEndian()}; { new DateTime(ent.SyncTimestamp).ToString("dd.MM.yyyy HH:mm:ss")}; {ent.Description} ");
+                    if (row.Key[0] == 200)
+                    {
+                        var ent = tran.SelectDataBlockWithFixedAddress<Entity_Task>(table1, row.Value);
+                        Console.WriteLine(row.Key.ToBytesString() + $"  ID: {row.Key.Substring(1, 8).To_Int64_BigEndian()}; + { new DateTime(ent.SyncTimestamp).ToString("dd.MM.yyyy HH:mm:ss")}; {ent.Description} ");
+                    }
+                    else
+                        Console.WriteLine(row.Key.ToBytesString() + "   ex");
                 }
             }
         }
 
 
-        private void UpdateClientID(long id)
-        {
-            InitDBEngines();            
-            string table = "Task1";
-            DateTime now = DateTime.UtcNow;
-
-            using (var tran = DBEngineClient.GetTransaction())
-            {
-                
-                var row = tran.Select<byte[], byte[]>(table, 200.ToIndex(id));
-                if(row.Exists)
-                {
-
-                    var ent = tran.SelectDataBlockWithFixedAddress<Entity_Task_Client>(table, row.Value);
-                    ent.SyncTimestamp = now.Ticks;
-                    ent.Description = "cln desc from" + ent.SyncTimestamp;
-
-                    tran.InsertDataBlockWithFixedAddress<Entity_Task_Client>(table, row.Value, ent); //Entity is stored in the same table
-
-                    //tran.Insert<byte[], byte[]>(table, 200.ToIndex(ent.Id), pBlob); 
-                    tran.Insert<byte[], byte[]>(table, 201.ToIndex(ent.SyncTimestamp, ent.Id), row.Value);
-
-                    tran.Commit();
-                }
-            }
-
-        }
+      
 
         private void UpdateServerID(long id)
         {
@@ -309,14 +318,18 @@ namespace EntitySyncingClientTester
                 if (row.Exists)
                 {
 
-                    var ent = tran.SelectDataBlockWithFixedAddress<Entity_Task_Client>(table, row.Value);
-                    ent.SyncTimestamp = now.Ticks;
-                    ent.Description = "srv desc from" + ent.SyncTimestamp;
+                    var oldEnt = tran.SelectDataBlockWithFixedAddress<Entity_Task_Server>(table, row.Value);
+                    var newEnt = oldEnt.CloneProtobuf();
 
-                    tran.InsertDataBlockWithFixedAddress<Entity_Task_Client>(table, row.Value, ent); //Entity is stored in the same table
+                    newEnt.SyncTimestamp = now.Ticks;
+                    newEnt.Description = "srv desc from" + newEnt.SyncTimestamp;
+
+                    tran.InsertDataBlockWithFixedAddress<Entity_Task_Server>(table, row.Value, newEnt); //Entity is stored in the same table
+
+                    SyncEngine.InsertIndex4Sync(tran, table, newEnt, row.Value, oldEnt);
 
                     //tran.Insert<byte[], byte[]>(table, 200.ToIndex(ent.Id), pBlob); 
-                    tran.Insert<byte[], byte[]>(table, 201.ToIndex(ent.SyncTimestamp, ent.Id), row.Value);
+                    //tran.Insert<byte[], byte[]>(table, 201.ToIndex(ent.SyncTimestamp, ent.Id), row.Value);
 
                     tran.Commit();
                 }
@@ -324,14 +337,14 @@ namespace EntitySyncingClientTester
 
         }
 
-        private void button6_Click(object sender, EventArgs e)
-        {
-            UpdateClientID(Convert.ToInt64(textBox2.Text));
-        }
 
         private void button7_Click(object sender, EventArgs e)
         {
             UpdateServerID(Convert.ToInt64(textBox2.Text));
         }
+
+        #endregion
+
+
     }
 }

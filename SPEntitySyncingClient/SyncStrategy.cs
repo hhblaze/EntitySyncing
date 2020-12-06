@@ -26,7 +26,13 @@ namespace EntitySyncingClient
 
         public abstract long GetLastServerSyncTimeStamp(DBreeze.Transactions.Transaction tran);
 
-        public abstract void UpdateLocalDatabase(List<SyncOperation> syncList, long newServerSyncTimeStamp);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="syncList"></param>
+        /// <param name="newServerSyncTimeStamp"></param>
+        /// <returns>indicates that there were conflict entity IDs and we must re-run synchronization with the server</returns>
+        public abstract bool UpdateLocalDatabase(List<SyncOperation> syncList, long newServerSyncTimeStamp);
 
         /// <summary>
         /// "/modules.http.GM_PersonalDevice/IDT_Actions"

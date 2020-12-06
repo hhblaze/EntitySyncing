@@ -43,6 +43,8 @@ namespace EntitySyncingClient
         internal Action _resetWebSession = null;
         internal Action _syncIsFinishing = null;
 
+        Dictionary<string, EntityFold> lstToSync = new Dictionary<string, EntityFold>();
+
 
         public Engine(ILogger logger, DBreeze.DBreezeEngine dbEngine, Func<string, string, object, Task<HttpCapsule>> serverSender, Action resetWebSession, Action syncIsFinishing)
         {
@@ -67,85 +69,23 @@ namespace EntitySyncingClient
             SyncProcess?.Invoke(System.Threading.Interlocked.Read(ref SyncOperationsCount));
         }
 
+        /// <summary>
+        /// Fills up index 200. Creation of transaction, synchronization of the table and transaction commit is outside of this function.
+        /// Entity desired ID and SyncTimestamp must be specified
+        /// </summary>
+        /// <param name="table">Where must be stored index 200</param>
+        /// <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
+        /// <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
+        /// <param name="oldEntity">old instance of the entity from DB</param>
+        public void InsertIndex4Sync(DBreeze.Transactions.Transaction tran, string table, ISyncEntity entity, byte[] ptrEntityContent, ISyncEntity oldEntity)
+        {
+            if(oldEntity == null)
+                tran.Insert<byte[], byte[]>(table, 200.ToIndex(entity.Id), ptrEntityContent);
 
-        ///// <summary>
-        ///// Check serverSender destination
-        ///// </summary>
-        ///// <typeparam name="T"></typeparam>
-        ///// <param name="syncStrategy"></param>
-        ///// <param name="serverSender">External function that sends via HTTP </param>
-        ///// <param name="resetWebSession">if supplied will be called when need to kill websession</param>
-        ///// <returns></returns>
-        //async Task<ESyncResult> SyncEntityWithUID<T>(SyncStrategy<T> syncStrategy)
-        //{
-        //    try
-        //    {
-        //        var lastServerSyncTimeStamp = 0L;
-        //        List<SyncOperation> syncList;
-        //        bool repeatSynchro;
+            //Adding to value one byte (17) indicating that this is a new entity
+            tran.Insert<byte[], byte[]>(table, 201.ToIndex(entity.SyncTimestamp, entity.Id), (oldEntity == null) ? new byte[] { 1 } : null);
+        }
 
-        //        using (var tran = DBEngine.GetTransaction())
-        //        {
-        //            syncList = syncStrategy.GetSyncOperations(tran, out repeatSynchro);
-        //            lastServerSyncTimeStamp = syncStrategy.GetLastServerSyncTimeStamp(tran);
-        //        }
-
-        //        Dictionary<string, byte[]> toServer = new Dictionary<string, byte[]>();
-        //        toServer.Add("LastServerSyncTimeStamp", lastServerSyncTimeStamp.To_8_bytes_array_BigEndian());
-        //        toServer.Add("SyncLst", syncList.SerializeProtobuf());
-        //        //syncStrategy.UrlSync
-        //        //Sending Entities to server
-        //        var httpCapsule = await _serverSender("/modules.http.GM_PersonalDevice/IDT_Actions",
-        //         "{'Action':'SYNCHRONIZE_ENTITIES';'EntityType':'" + typeof(T).FullName + "'}", toServer.SerializeProtobuf());
-
-        //        if (httpCapsule == null)  //Synchro with error
-        //            return ESyncResult.ERROR;
-
-        //        Dictionary<string, string> res = httpCapsule.Type.DeserializeJsonSimple();
-
-        //        if (res["Result"] == "OK")
-        //        {
-
-        //            //Unpacking all 
-        //            Dictionary<string, byte[]> fromServer = httpCapsule.Body.DeserializeProtobuf<Dictionary<string, byte[]>>();
-
-        //            if (!repeatSynchro && fromServer["RepeatSynchro"][0] == 1)
-        //                repeatSynchro = true;
-
-        //            var syncListFromServer = fromServer["SyncLst"].DeserializeProtobuf<List<SyncOperation>>();
-        //            var newServerSyncTimeStamp = fromServer["NewServerSyncTimeStamp"].To_Int64_BigEndian();
-
-        //            Console.WriteLine($"SyncEntityWithUID<{ typeof(T).Name }> ::: server returned {syncListFromServer.Count} items.");
-
-        //            syncStrategy.UpdateLocalDatabase(syncListFromServer, newServerSyncTimeStamp);
-
-        //        }
-        //        else if (res["Result"] == "AUTH FAILED")
-        //        {
-        //            _resetWebSession?.Invoke();
-        //            //WebService.Instance.ResetWebSession();
-        //            return ESyncResult.AUTH_FAIL;
-        //        }
-
-        //        //Repeat call of the procedure
-        //        if (repeatSynchro)
-        //        {
-        //            return ESyncResult.REPEAT;
-        //        }
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"SyncEntityWithUID<{ typeof(T).Name }> ::: {ex.ToString()}");
-        //        return ESyncResult.ERROR;
-        //    }
-        //    Console.WriteLine($"SyncEntityWithUID<{ typeof(T).Name }> ::: finished");
-        //    return ESyncResult.OK;
-        //}
-
-
-        
-        Dictionary<string, EntityFold> lstToSync = new Dictionary<string, EntityFold>();
 
         class EntityFold
         {
@@ -171,26 +111,26 @@ namespace EntitySyncingClient
         /// <typeparam name="T"></typeparam>
         /// <param name="table"></param>
         /// <param name="entity"></param>
-        public void AddSyncEntityV1<T>(EntitySyncingBaseV1 entity)
+        public void AddEntity4Sync<T>(EntitySyncingBaseV1 entity)
         {
             if (lstToSync.ContainsKey(typeof(T).ToString()))
                 return;
+
+            entity.SyncingEngine = this;
 
             EntityFold igo = new EntityFold()
             {
                 type = typeof(T),
                 entity = entity,
-               // Table = table
             };
 
             
             Type openGenericClass = typeof(SyncStrategyV1<>);
             Type dynamicClosedGenericClass = openGenericClass.MakeGenericType(igo.type);
-            igo.Instance = Activator.CreateInstance(dynamicClosedGenericClass, entity);
-            //igo.SyncEntity = dynamicClosedGenericClass.GetMethod("SyncEntityWithUID");           
-            igo.SyncEntity = dynamicClosedGenericClass.GetMethod("SyncEntityWithUID");
+            igo.Instance = Activator.CreateInstance(dynamicClosedGenericClass, entity);                     
+            igo.SyncEntity = dynamicClosedGenericClass.GetMethod("SyncEntity");
 
-            var pi = dynamicClosedGenericClass.GetProperty("Engine");
+            var pi = dynamicClosedGenericClass.GetProperty("SyncEngine");
             pi.SetValue(igo.Instance, this);
 
             lstToSync.Add(igo.type.ToString(), igo);
@@ -198,10 +138,7 @@ namespace EntitySyncingClient
 
 
         public async System.Threading.Tasks.Task SynchronizeEntities()
-        {
-            //Removing check from here
-            //if (User.Profile == null)
-            //    return;
+        {        
 
             lock (lock_entitySynchro)
             {
@@ -248,8 +185,7 @@ namespace EntitySyncingClient
 
 
                 foreach (var e2s in lstToSync)
-                {               
-
+                {      
                     lt.Add(Sync(e2s.Value));
                 }
                
@@ -266,7 +202,12 @@ namespace EntitySyncingClient
 
                 await System.Threading.Tasks.Task.WhenAll(lt);
 
-                _syncIsFinishing?.Invoke(); //Can be used special hacks for all entites to clean table and so on. Sync will be finished only after calling this function; not necessary in try catch
+                try
+                {
+                    _syncIsFinishing?.Invoke(); //Can be used special hacks for all entites to clean table and so on. Sync will be finished only after calling this function; not necessary in try catch
+                }
+                catch { }
+                
 
                 System.Threading.Interlocked.Exchange(ref SyncOperationsCount, 0);
 

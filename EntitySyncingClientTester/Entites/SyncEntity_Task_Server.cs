@@ -41,24 +41,21 @@ namespace EntitySyncingClientTester
 
         }
 
-        public override bool OnInsertEntity(long entityKey, Entity_Task_Server entity, Entity_Task_Server oldEntity, long newEntitySyncTimestamp)
+        public override bool OnInsertEntity(Entity_Task_Server entity, Entity_Task_Server oldEntity)
         {
-            //return base.OnInsertEntity(entityKey, entity, oldEntity, newEntitySyncTimestamp);
-            entity.SyncTimestamp = newEntitySyncTimestamp;
-
+            //at this moment
             if(oldEntity == null)
             {
-                //New Entity, giving it new ID
-               // entity.Id = newEntitySyncTimestamp;
+                //It is possible (but not necessary by default) to re-assign entity.Id right here                
             }
 
-            byte[] pBlob = null;
-            pBlob = tran.InsertDataBlockWithFixedAddress<Entity_Task_Server>(this.entityTable, pBlob, entity); //Entity is stored in the same table
+            
+            //this.entityValueTable in case if entity content is stored in the other table then indexes for sync operations
+            this.refToValueDataBlockWithFixedAddress = tran.InsertDataBlockWithFixedAddress<Entity_Task_Server>(this.entityTable, this.refToValueDataBlockWithFixedAddress, entity); //Entity is stored in the same table
 
+            //Sync indexes will be handled automatically if return true, also based on entity and this.refToValueDataBlockWithFixedAddress value
 
-            tran.Insert<byte[], byte[]>(this.entityTable, 200.ToIndex(entity.Id), pBlob);
-            tran.Insert<byte[], byte[]>(this.entityTable, 201.ToIndex(entity.SyncTimestamp, entity.Id), pBlob);
-
+            //Other indexes can be handled here
             //tran.TextInsert(tblText, entityKey.To_8_bytes_array_BigEndian(), entity.GetSearchWordsContains() ?? String.Empty, entity.GetSearchWordsFull() ?? String.Empty,
             //  deferredIndexing: true);
 

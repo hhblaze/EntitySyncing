@@ -14,7 +14,7 @@ namespace EntitySyncingClient
         private const int LocalSyncTS = 205;
         private const int ServerSyncTS = 206;
 
-        public Engine Engine { get; set; }
+        public Engine SyncEngine { get; set; }
         
 
         private EntitySyncingBaseV1 _entitySync;
@@ -36,7 +36,7 @@ namespace EntitySyncingClient
             _newLocalSyncTimeStamp = DateTime.UtcNow.Ticks; //This value will be applied if there is nothing to synchronize
             repeatSync = false;
 
-            var changedEntities = new Dictionary<long, long>();    //Key is entityId, Value is Synctimestamp
+            var changedEntities = new Dictionary<long, Tuple<long,bool>>();    //Key is entityId, Value is Synctimestamp
             var entityType = typeof(T).FullName;
 
             var lastLocalSyncTimeStamp = tran.Select<byte[], long>(_entityTable, new byte[] { LocalSyncTS }).Value;
@@ -55,7 +55,19 @@ namespace EntitySyncingClient
                 }
 
                 //We will leave only last update of the particular entity
-                changedEntities[row.Key.Substring(9, 8).To_Int64_BigEndian()] = row.Key.Substring(1, 8).To_Int64_BigEndian();
+                if (!changedEntities.TryGetValue(row.Key.Substring(9, 8).To_Int64_BigEndian(), out var tpl1))
+                {
+                    changedEntities[row.Key.Substring(9, 8).To_Int64_BigEndian()] = new Tuple<long, bool>(row.Key.Substring(1, 8).To_Int64_BigEndian(),
+                        (row.Value?.Length >= 1 && row.Value[0] == 1) ? true : false) //indicating that new entity was inserted
+                        ;
+                }
+                else
+                {
+                    changedEntities[row.Key.Substring(9, 8).To_Int64_BigEndian()] = new Tuple<long, bool>(row.Key.Substring(1, 8).To_Int64_BigEndian(),
+                        (tpl1.Item2 || (row.Value?.Length >= 1 && row.Value[0] == 1)) ? true : false) //indicating that new entity was inserted (from any of inserts that must be done for the id)
+                        ;
+                }
+
                 _newLocalSyncTimeStamp = row.Key.Substring(1, 8).To_Int64_BigEndian();
             }
 
@@ -64,10 +76,11 @@ namespace EntitySyncingClient
                 var rowEntity = tran.Select<byte[], byte[]>(_entityTable, new byte[] { Entity }.Concat(ent.Key.To_8_bytes_array_BigEndian()));
                 var syncOperation = new SyncOperation()
                 {
+                    ExternalId = ent.Value.Item2 ? 0 : ent.Key, //if entity new ExternalId will be 0 otherwise will equal to InternalId and higher than 0
                     InternalId = ent.Key,
                     Operation = rowEntity.Exists ? SyncOperation.eOperation.INSERT : SyncOperation.eOperation.REMOVE,
                     Type = entityType,
-                    SyncTimestamp = ent.Value
+                    SyncTimestamp = ent.Value.Item1
                 };
                 if (rowEntity.Exists)
                 {
@@ -78,9 +91,12 @@ namespace EntitySyncingClient
             return syncList;
         }
 
-        public override void UpdateLocalDatabase(List<SyncOperation> syncList, long newServerSyncTimeStamp)
+        public override bool UpdateLocalDatabase(List<SyncOperation> syncList, long newServerSyncTimeStamp)
         {
-            using (var tran = Engine.DBEngine.GetTransaction())
+            var now = DateTime.UtcNow.Ticks;
+            bool reRunSync = false;
+
+            using (var tran = SyncEngine.DBEngine.GetTransaction())
             {
                 //Synchronization of all necessary tables must be in entitySync.Init 
                 _entitySync.Init(tran, _entityTable);
@@ -94,7 +110,34 @@ namespace EntitySyncingClient
 
                 int processedBeforeRaise = 0;
 
-                foreach (var opr in syncList)
+                
+                foreach (var opr in syncList.Where(r => r.Operation == SyncOperation.eOperation.EXCHANGE))
+                {
+                    if (opr.ExternalId > 0)
+                    {
+                        //opr.ExternalID will help to determine new ID
+                        var rowLocalEntity = tran.Select<byte[], byte[]>(_entityTable, new byte[] { Entity }.Concat(opr.InternalId.To_8_bytes_array_BigEndian()));                        
+                        if (rowLocalEntity.Exists)
+                        {   
+                            //Setting value from the server to this ID
+                            tran.InsertDataBlockWithFixedAddress<byte[]>(_entitySync.GetContentTable, rowLocalEntity.Value, opr.SerializedObject);
+
+                            var oldEntity = rowLocalEntity.GetDataBlockWithFixedAddress<T>();
+                            //New GeneratedID must be stored for the new sync
+                            ((ISyncEntity)oldEntity).Id = opr.ExternalId; //Theoretically on this place can be called a user-function to get another ID type
+                            ((ISyncEntity)oldEntity).SyncTimestamp = ++now;
+                            byte[] ptrContent = tran.InsertDataBlockWithFixedAddress<T>(_entitySync.GetContentTable, null, oldEntity);
+                            SyncEngine.InsertIndex4Sync(tran, _entitySync.entityTable, (ISyncEntity)oldEntity, ptrContent, null);
+
+                            reRunSync = true;
+                        }
+                    }
+                 
+                }
+
+
+
+                foreach (var opr in syncList.Where(r=>r.Operation != SyncOperation.eOperation.EXCHANGE))
                 {
                     switch (opr.Operation)
                     {
@@ -129,7 +172,7 @@ namespace EntitySyncingClient
 
                             //------------DOING NOTHING, WE DONT DELETE ENTITIES
 
-                            break;
+                            break;                      
                     }
 
                     //Computing processed elements and raises event once per SyncEntitiesMgr.RaiseSyncProcessEach
@@ -147,11 +190,16 @@ namespace EntitySyncingClient
                 tran.Commit();
             }
             _entitySync.OnEntitySyncIsFinished();
+
+            return reRunSync;
         }
 
 
-
-        public async Task<ESyncResult> SyncEntityWithUID()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public async Task<ESyncResult> SyncEntity()
         {
             try
             {
@@ -159,7 +207,7 @@ namespace EntitySyncingClient
                 List<SyncOperation> syncList;
                 bool repeatSynchro;
 
-                using (var tran = Engine.DBEngine.GetTransaction())
+                using (var tran = SyncEngine.DBEngine.GetTransaction())
                 {
                     syncList = this.GetSyncOperations(tran, out repeatSynchro);
                     lastServerSyncTimeStamp = this.GetLastServerSyncTimeStamp(tran);
@@ -171,7 +219,7 @@ namespace EntitySyncingClient
                 //syncStrategy.UrlSync
                 //Sending Entities to server
                 //var httpCapsule = await _engine._serverSender("/modules.http.GM_PersonalDevice/IDT_Actions",
-                var httpCapsule = await Engine._serverSender(_urlSync,
+                var httpCapsule = await SyncEngine._serverSender(_urlSync,
                  "{'Action':'SYNCHRONIZE_ENTITIES';'EntityType':'" + typeof(T).FullName + "'}", toServer.SerializeProtobuf());
 
                 if (httpCapsule == null)  //Synchro with error
@@ -191,15 +239,18 @@ namespace EntitySyncingClient
                     var syncListFromServer = fromServer["SyncLst"].DeserializeProtobuf<List<SyncOperation>>();
                     var newServerSyncTimeStamp = fromServer["NewServerSyncTimeStamp"].To_Int64_BigEndian();
 
-                    if(Engine.Verbose)
+                    if(SyncEngine.Verbose)
                         Console.WriteLine($"SyncEntityWithUID<{ typeof(T).Name }> ::: server returned {syncListFromServer.Count} items.");
 
-                    this.UpdateLocalDatabase(syncListFromServer, newServerSyncTimeStamp);
+                    if(this.UpdateLocalDatabase(syncListFromServer, newServerSyncTimeStamp))
+                    {
+                        return await SyncEntity(); //this is a rare exeuting place, only in case if clientSideEntityID equals to existing serverSideEntityID, and even in this case it should be executed only once
+                    }
 
                 }
                 else if (res["Result"] == "AUTH FAILED")
                 {
-                    Engine._resetWebSession?.Invoke();
+                    SyncEngine._resetWebSession?.Invoke();
                     //WebService.Instance.ResetWebSession();
                     return ESyncResult.AUTH_FAIL;
                 }
@@ -219,7 +270,7 @@ namespace EntitySyncingClient
                 return ESyncResult.ERROR;
             }
 
-            if (Engine.Verbose)
+            if (SyncEngine.Verbose)
                 Console.WriteLine($"SyncEntityWithUID<{ typeof(T).Name }> ::: finished");
 
             return ESyncResult.OK;

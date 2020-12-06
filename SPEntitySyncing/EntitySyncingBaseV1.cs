@@ -15,7 +15,7 @@ namespace EntitySyncing
         /// <param name="oldEntity"></param>
         /// <param name="newEntitySyncTimestamp"></param>
         /// <returns>TRUE - indicates that incoming entity must be applied. FALSE means that this entity is not so strong by political reasons as server-side one and must be changed with server-side.</returns>
-        public virtual bool OnInsertEntity(long entityKey, T entity, T oldEntity, long newEntitySyncTimestamp)
+        public virtual bool OnInsertEntity(T entity, T oldEntity)
         {
             return true;
         }
@@ -24,13 +24,17 @@ namespace EntitySyncing
         protected DBreeze.Transactions.Transaction tran = null;
         public string entityTable = "";
         /// <summary>
-        /// is set by synchronizer, in case if entity exists, then must be set from onInsertEntityFunction after repeat insert
+        /// In case if value of the entity differs from the table where synchronizer holds data
+        /// </summary>
+        public string entityValueTable = "";
+        /// <summary>
+        /// Is set by synchronizer, in case if entity exists, then must be set from onInsertEntityFunction after repeat insert
         /// </summary>
         public byte[] refToValueDataBlockWithFixedAddress = null;
         //protected GccObjects.Net.UserManagement.GccUserRemoteView user = null;
         protected object user = null;
 
-        public long TopicId = 0; //In case if synchronization comes from the specific APP, like MA-YA, we can return back topic ID
+        public long TopicId = 0; //In case if synchronization comes from the specific APP
         public bool TopicIdDependantSync = false;
 
         public virtual bool CheckTopicIdEntity(T entityValue)

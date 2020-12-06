@@ -10,7 +10,8 @@ namespace EntitySyncing
         public enum eOperation
         {
             INSERT,
-            REMOVE
+            REMOVE,
+            EXCHANGE
         }
 
         public SyncOperation()

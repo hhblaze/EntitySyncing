@@ -45,7 +45,22 @@ namespace EntitySyncing
 
             DBEngine = dbEngine;
         }
-       
+
+        /// <summary>
+        /// Fills up index 200. Entity desired ID and SyncTimestamp must be specified.
+        /// Creation of transaction, synchronization of the table and transaction commit is outside of this function.
+        /// </summary>
+        /// <param name="table">where index 200 must be stored </param>
+        /// <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
+        /// <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
+        public void InsertIndex4Sync(DBreeze.Transactions.Transaction tran, string table, ISyncEntity entity, byte[] ptrEntityContent, ISyncEntity oldEntity)
+        {
+            if (oldEntity == null)
+                tran.Insert<byte[], byte[]>(table, 200.ToIndex(entity.Id), ptrEntityContent);
+
+            tran.Insert<byte[], byte[]>(table, 201.ToIndex(entity.SyncTimestamp, entity.Id), null);
+        }
+     
 
         /// <summary>
         /// V2
@@ -138,8 +153,9 @@ namespace EntitySyncing
 
                                     //Checking if we got such row (row.InternalId must be always more then 0, it,s UID)
                                     var rowExistingEntity = tran.Select<byte[], byte[]>(entitySync.entityTable, new byte[] { 200 }.Concat(row.InternalId.To_8_bytes_array_BigEndian()));
-                                    if (rowExistingEntity.Exists)
+                                    if (rowExistingEntity.Exists && row.ExternalId > 0)
                                     {
+
                                         //Possible update
                                         //existingEntity = rowExistingEntity.Value;
                                         entitySync.refToValueDataBlockWithFixedAddress = rowExistingEntity.Value;
@@ -164,8 +180,12 @@ namespace EntitySyncing
                                             newEntity = row.SerializedObject.DeserializeProtobuf<T>();
                                             //et.Insert<long, T>(row.InternalId, newEntity);
 
-                                            //if (entitySync.OnInsertEntity(et, row.InternalId, newEntity, existingEntity, syncTimestamp))
-                                            if (entitySync.OnInsertEntity(row.InternalId, newEntity, existingEntity, row.SyncTimestamp))
+                                            ((ISyncEntity)newEntity).Id = row.InternalId; //just for a case
+                                            ((ISyncEntity)newEntity).SyncTimestamp = row.SyncTimestamp;
+
+
+                                            //if (entitySync.OnInsertEntity(row.InternalId, newEntity, existingEntity, row.SyncTimestamp))
+                                            if (entitySync.OnInsertEntity(newEntity, existingEntity))
                                             {
 
                                                 //Only in case if business logic allows us to apply newly incoming entity, we do that
@@ -182,7 +202,7 @@ namespace EntitySyncing
                                                 tran.Insert<byte[], byte[]>(entitySync.entityTable, new byte[] { 201 }.ConcatMany(
                                                     row.SyncTimestamp.To_8_bytes_array_BigEndian(),
                                                     row.InternalId.To_8_bytes_array_BigEndian()
-                                                    ), entitySync.refToValueDataBlockWithFixedAddress);
+                                                    ), null);// entitySync.refToValueDataBlockWithFixedAddress);
 
                                                 nonReturningBackEntites.Add(row.InternalId);  //Strong ID which we must ignored for sending
                                             }
@@ -196,6 +216,8 @@ namespace EntitySyncing
                                     }
                                     else
                                     {
+                                       
+
                                         //Insert new 
                                         newEntity = row.SerializedObject.DeserializeProtobuf<T>();
                                         entitySync.refToValueDataBlockWithFixedAddress = null;
@@ -204,20 +226,51 @@ namespace EntitySyncing
                                         if (syncTimestamp <= row.SyncTimestamp)
                                             syncTimestamp = row.SyncTimestamp + 1;
 
-                                        //Saving renewed entity                                                          
-                                        //entitySync.OnInsertEntity(row.InternalId, newEntity, null, syncTimestamp);
-                                        entitySync.OnInsertEntity(row.InternalId, newEntity, default(T), syncTimestamp);
-
-                                        //st.Insert<long, long>(syncTimestamp, row.InternalId);
-                                        //tran.Insert<byte[], long>(entitySync.entityTable, new byte[] { 201 }.Concat(syncTimestamp.To_8_bytes_array_BigEndian()), row.InternalId);
-                                        tran.Insert<byte[], byte[]>(entitySync.entityTable, new byte[] { 201 }.ConcatMany(
-                                            syncTimestamp.To_8_bytes_array_BigEndian(),
-                                            row.InternalId.To_8_bytes_array_BigEndian()
-                                            ), entitySync.refToValueDataBlockWithFixedAddress);
+                                        ((ISyncEntity)newEntity).SyncTimestamp = syncTimestamp;
+                                        ((ISyncEntity)newEntity).Id = row.InternalId; //default ID
 
 
-                                        if (!entityMustBeReturnedBackToClientAfterCreation) //In case if newly created on the client-side entity must not be returned back
-                                            nonReturningBackEntites.Add(row.InternalId);
+                                        if (rowExistingEntity.Exists)
+                                        {
+                                            //ID interfer with existing ID, client must solve it                                            
+
+                                            newSyncOper = new SyncOperation()
+                                            {
+                                                ExternalId = syncTimestamp, //It will have another ExternalId more than 0, it is suggested time stamp
+                                                InternalId = row.InternalId,                                                
+                                                Operation = SyncOperation.eOperation.EXCHANGE,
+                                                SyncTimestamp = syncTimestamp,
+                                                Type = typeof(T).FullName,
+                                                // SerializedObject = row.SerializedObject
+                                                SerializedObject = tran.SelectDataBlockWithFixedAddress<byte[]>(entitySync.entityTable, rowExistingEntity.Value)
+                                            };
+
+                                            returnBackOperations.Add(syncTimestamp, newSyncOper);
+                                        }
+                                        else
+                                        {
+                                            //Saving renewed entity                                                                                                 
+                                            // if (entitySync.OnInsertEntity(row.InternalId, newEntity, default(T), syncTimestamp))
+                                            if (entitySync.OnInsertEntity(newEntity, default(T)))
+                                            {
+                                                //entitySync.refToValueDataBlockWithFixedAddress must be filled after calling OnInsertEntity
+
+                                                tran.Insert<byte[], byte[]>(entitySync.entityTable, 200.ToIndex(((ISyncEntity)newEntity).Id), entitySync.refToValueDataBlockWithFixedAddress);
+
+                                                tran.Insert<byte[], byte[]>(entitySync.entityTable, 201.ToIndex(((ISyncEntity)newEntity).SyncTimestamp, ((ISyncEntity)newEntity).Id),
+                                                    row.InternalId.To_8_bytes_array_BigEndian());
+                                            }
+
+                                            //tran.Insert<byte[], byte[]>(entitySync.entityTable, new byte[] { 201 }.ConcatMany(
+                                            //    syncTimestamp.To_8_bytes_array_BigEndian(),
+                                            //    row.InternalId.To_8_bytes_array_BigEndian()
+                                            //    ), null); 
+
+                                            //entitySync.refToValueDataBlockWithFixedAddress);
+
+                                            if (!entityMustBeReturnedBackToClientAfterCreation) //In case if newly created on the client-side entity must not be returned back
+                                                nonReturningBackEntites.Add(row.InternalId);
+                                        }
                                     }
                                     break;
                                 case SyncOperation.eOperation.REMOVE:
@@ -254,8 +307,8 @@ namespace EntitySyncing
 
                             if (
                                 nonReturningBackEntites.Contains(row.Key.Substring(9, 8).To_Int64_BigEndian())
-                                ||
-                                returnBackOperations.ContainsKey(row.Key.Substring(9, 8).To_Int64_BigEndian()) //??? it's not possible here
+                                //||
+                                //returnBackOperations.ContainsKey(row.Key.Substring(9, 8).To_Int64_BigEndian()) //??? it's not possible here
                                 ||
                                 srvSyncList.ContainsKey(row.Key.Substring(9, 8).To_Int64_BigEndian())
                                 )
@@ -319,7 +372,7 @@ namespace EntitySyncing
             catch (Exception ex)
             {
                 httpCapsule.Type = "{'Result':'NOT OK';}";                
-                Logger.LogException("EntitySyncing.Engine", "SynchronizeEntityWithUID", ex, "");
+                Logger.LogException("EntitySyncing.Engine", "SyncEntityV1", ex, "");
             }
 
 

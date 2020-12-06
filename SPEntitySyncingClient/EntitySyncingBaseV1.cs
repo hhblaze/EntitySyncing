@@ -31,7 +31,17 @@ namespace EntitySyncingClient
 
         protected DBreeze.Transactions.Transaction tran = null;
         public string entityTable = "";
+        /// <summary>
+        /// In case if value of the entity differs from the table where synchronizer holds data
+        /// </summary>
+        public string entityValueTable = "";
         public byte[] refToValueDataBlockWithFixedAddress = null;
+        public EntitySyncingClient.Engine SyncingEngine = null;
+
+        public string GetContentTable
+        {
+            get { return String.IsNullOrEmpty(entityValueTable) ? entityTable : entityValueTable; }
+        }
 
         /// <summary>
         /// Example "/modules.http.GM_PersonalDevice/IDT_Actions"
