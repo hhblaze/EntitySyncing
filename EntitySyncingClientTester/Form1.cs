@@ -469,7 +469,6 @@ namespace EntitySyncingClientTester
         {
             UpdateClient2ID(Convert.ToInt64(textBox2.Text));
         }
-        #endregion
 
         private void button9_Click(object sender, EventArgs e)
         {
@@ -518,5 +517,22 @@ namespace EntitySyncingClientTester
                 }
             }
         }
+        #endregion
+
+
+
+        private void button14_Click(object sender, EventArgs e)
+        {
+            var resbof = BiserObjectify.Generator.Run(typeof(EntitySyncing.SyncOperation), true,
+     @"H:\c\tmp\synchronizer\", forBiserBinary: true, forBiserJson: false, null);
+
+            
+        }
+
+       
+
+
+
+
     }
 }

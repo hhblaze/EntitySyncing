@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EntitySyncing
+namespace EntitySyncingClient
 {
     [ProtoBuf.ProtoContract]
-    public class SyncOperation
+    public partial class SyncOperation
     {
         public enum eOperation
         {
@@ -14,9 +14,20 @@ namespace EntitySyncing
             EXCHANGE
         }
 
+        public eOperation GetOperation()
+        {
+            return (eOperation)Operation;
+        }
+
+        public static int SetOperation(eOperation operation)
+        {
+            return (int)operation;
+        }
+
         public SyncOperation()
         {
-            Operation = eOperation.INSERT;
+            //Operation = eOperation.INSERT;
+            Operation = 1;
             SyncTimestamp = 0;
             SerializedObject = null;
             InternalId = 0;
@@ -40,7 +51,7 @@ namespace EntitySyncing
         /// 
         /// </summary>
         [ProtoBuf.ProtoMember(3, IsRequired = true)]
-        public eOperation Operation { get; set; }
+        public int Operation { get; set; }
 
         /// <summary>
         /// Entity type

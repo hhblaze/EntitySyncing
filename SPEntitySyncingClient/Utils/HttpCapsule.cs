@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EntitySyncing
+namespace EntitySyncingClient
 {
     [ProtoBuf.ProtoContract]
-    public class HttpCapsule
+    public partial class HttpCapsule
     {
 
         public HttpCapsule()

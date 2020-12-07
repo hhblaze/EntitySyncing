@@ -62,6 +62,7 @@ namespace EntitySyncing
         }
      
 
+
         /// <summary>
         /// V2
         /// </summary>
@@ -149,7 +150,8 @@ namespace EntitySyncing
 
                         if (syncDirection != eSynchroDirectionType.FromServer)
                         {
-                            switch (row.Operation)
+                            //switch (row.Operation)
+                            switch (row.GetOperation())
                             {
 
                                 case SyncOperation.eOperation.INSERT:
@@ -241,7 +243,7 @@ namespace EntitySyncing
                                             {
                                                 ExternalId = syncTimestamp, //It will have another ExternalId more than 0, it is suggested time stamp
                                                 InternalId = row.InternalId,                                                
-                                                Operation = SyncOperation.eOperation.EXCHANGE,
+                                                Operation = SyncOperation.SetOperation(SyncOperation.eOperation.EXCHANGE),
                                                 SyncTimestamp = syncTimestamp,
                                                 Type = typeof(T).FullName,
                                                 // SerializedObject = row.SerializedObject
@@ -338,7 +340,7 @@ namespace EntitySyncing
                                 //ExternalId = 0,
                                 InternalId = ent.Key,
                                 //SerializedObject = null, //??? do we need that - NO (We need a check if serialized object != null)
-                                Operation = SyncOperation.eOperation.REMOVE,
+                                Operation = SyncOperation.SetOperation(SyncOperation.eOperation.REMOVE),
                                 SyncTimestamp = ent.Value,
                                 Type = typeof(T).FullName
                             };
@@ -347,7 +349,7 @@ namespace EntitySyncing
                             {
                                 //_M_WDA._Log.LogInformation("GM_PersonalDevice.IDoThings", "SynchronizeEntityWithUID", "InternalId:" + newSyncOper.InternalId + "; STS:" + newSyncOper.SyncTimestamp, "");
 
-                                newSyncOper.Operation = SyncOperation.eOperation.INSERT;
+                                newSyncOper.Operation = SyncOperation.SetOperation(SyncOperation.eOperation.INSERT);
                                 //newSyncOper.SerializedObject = rowEntity.Value.SerializeProtobuf();
                                 newSyncOper.SerializedObject = rowEntity.GetDataBlockWithFixedAddress<T>().SerializeProtobuf();
                             }

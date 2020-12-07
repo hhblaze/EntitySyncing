@@ -11,11 +11,14 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Engine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EntitySyncingBaseV1.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)HttpCapsule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\DictStrByteArr.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\HttpCapsule.Biser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\HttpCapsule.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ISyncEntity.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Logger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Logger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProtobufSerializer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)SyncOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\SyncOperation.Biser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\SyncOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SyncStrategieV1.cs" />
   </ItemGroup>
 </Project>

@@ -101,7 +101,7 @@ namespace EntitySyncingClient
                 {
                     ExternalId = ent.Value.Item2 ? 0 : ent.Key, //if entity new ExternalId will be 0 otherwise will equal to InternalId and higher than 0
                     InternalId = ent.Key,
-                    Operation = rowEntity.Exists ? SyncOperation.eOperation.INSERT : SyncOperation.eOperation.REMOVE,
+                    Operation = rowEntity.Exists ? SyncOperation.SetOperation(SyncOperation.eOperation.INSERT) : SyncOperation.SetOperation(SyncOperation.eOperation.REMOVE),
                     Type = entityType,
                     SyncTimestamp = ent.Value.Item1
                 };
@@ -135,7 +135,7 @@ namespace EntitySyncingClient
                 int processedBeforeRaise = 0;
 
                 
-                foreach (var opr in syncList.Where(r => r.Operation == SyncOperation.eOperation.EXCHANGE))
+                foreach (var opr in syncList.Where(r => r.Operation == SyncOperation.SetOperation(SyncOperation.eOperation.EXCHANGE)))
                 {
                     if (opr.ExternalId > 0)
                     {
@@ -164,9 +164,9 @@ namespace EntitySyncingClient
 
 
 
-                foreach (var opr in syncList.Where(r=>r.Operation != SyncOperation.eOperation.EXCHANGE))
+                foreach (var opr in syncList.Where(r=>r.Operation != SyncOperation.SetOperation(SyncOperation.eOperation.EXCHANGE)))
                 {
-                    switch (opr.Operation)
+                    switch (opr.GetOperation())
                     {
                         case SyncOperation.eOperation.INSERT:
                             var rowLocalEntity = tran.Select<byte[], byte[]>(_entitySync.entityTable, new byte[] { Entity }.Concat(opr.InternalId.To_8_bytes_array_BigEndian()));

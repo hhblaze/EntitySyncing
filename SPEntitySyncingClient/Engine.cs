@@ -43,10 +43,17 @@ namespace EntitySyncingClient
         internal Action _resetWebSession = null;
         internal Action _syncIsFinishing = null;
 
-        //Dictionary<string, EntityFold> lstToSync = new Dictionary<string, EntityFold>();
+        
         Dictionary<string, IEntityFold> lstToSync = new Dictionary<string, IEntityFold>();
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="dbEngine"></param>
+        /// <param name="serverSender"></param>
+        /// <param name="resetWebSession"></param>
+        /// <param name="syncIsFinishing"></param>
         public Engine(ILogger logger, DBreeze.DBreezeEngine dbEngine, Func<string, string, object, Task<HttpCapsule>> serverSender, Action resetWebSession, Action syncIsFinishing)
         {
             Logger.log = logger;
@@ -67,33 +74,24 @@ namespace EntitySyncingClient
 
         internal static void OnSyncProcess()
         {
-            SyncProcess?.Invoke(System.Threading.Interlocked.Read(ref SyncOperationsCount));
+            if (SyncProcess != null)
+            {
+                try
+                {
+
+                }
+                catch
+                {
+                    SyncProcess?.Invoke(System.Threading.Interlocked.Read(ref SyncOperationsCount));
+                }
+                
+            }
         }
-
-        
-
-        ///// <summary>
-        ///// Fills up index 200. Creation of transaction, synchronization of the table and transaction commit is outside of this function.
-        ///// Entity desired ID and SyncTimestamp must be specified
-        ///// </summary>
-        ///// <param name="table">Where must be stored index 200</param>
-        ///// <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
-        ///// <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
-        ///// <param name="oldEntity">old instance of the entity from DB</param>
-        //public void InsertIndex4Sync(DBreeze.Transactions.Transaction tran, string table, ISyncEntity entity, byte[] ptrEntityContent, ISyncEntity oldEntity)
-        //{
-        //    if(oldEntity == null)
-        //        tran.Insert<byte[], byte[]>(table, 200.ToIndex(entity.Id), ptrEntityContent);
-
-        //    //Adding to value one byte (17) indicating that this is a new entity
-        //    tran.Insert<byte[], byte[]>(table, 201.ToIndex(entity.SyncTimestamp, entity.Id), (oldEntity == null) ? new byte[] { 1 } : null);
-        //}
 
         interface IEntityFold
         {
             Task<ESyncResult> Sync();
         }
-
 
         class EntityFold<T>:IEntityFold
         {
