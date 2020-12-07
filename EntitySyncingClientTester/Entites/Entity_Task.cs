@@ -29,11 +29,6 @@ namespace EntitySyncingClientTester
     }
 
 
-    public partial class Entity_Task : EntitySyncingClient.ISyncEntity
-    {
-
-    }
-
     ///// <summary>
     ///// Must be unremarked and Entity_Task_Server must be remarked on the server-side, having in both client and server one entity
     ///// </summary>
@@ -42,7 +37,9 @@ namespace EntitySyncingClientTester
 
     //}
 
-
+    /// <summary>
+    /// For emulating reasons inside the same project entity receives another name Entity_Task_Server. 
+    /// </summary>
     [ProtoBuf.ProtoContract]
     public class Entity_Task_Server : EntitySyncing.ISyncEntity
     {

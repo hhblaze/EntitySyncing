@@ -256,7 +256,9 @@ namespace EntitySyncingClientTester
                         Console.WriteLine(row.Key.ToBytesString() + $"  ID: {row.Key.Substring(1, 8).To_Int64_BigEndian()}; + { new DateTime(ent.SyncTimestamp).ToString("dd.MM.yyyy HH:mm:ss")}; {ent.Description} ");
                     }
                     else
-                        Console.WriteLine(row.Key.ToBytesString() + "   ex");
+                    {
+                     //   Console.WriteLine(row.Key.ToBytesString() + "   ex");
+                    }
                 }
             }
 
@@ -358,7 +360,7 @@ namespace EntitySyncingClientTester
                     }
                     else
                     {
-                        Console.WriteLine(row.Key.ToBytesString() + "   ex");
+                       // Console.WriteLine(row.Key.ToBytesString() + "   ex");
                     }
                 }
             }
@@ -518,7 +520,9 @@ namespace EntitySyncingClientTester
                         Console.WriteLine(row.Key.ToBytesString() + $"  ID: {row.Key.Substring(1, 8).To_Int64_BigEndian()}; + { new DateTime(ent.SyncTimestamp).ToString("dd.MM.yyyy HH:mm:ss")}; {ent.Description} ");
                     }
                     else
-                        Console.WriteLine(row.Key.ToBytesString() + "   ex");
+                    {
+                     //   Console.WriteLine(row.Key.ToBytesString() + "   ex");
+                    }
                 }
             }
         }
