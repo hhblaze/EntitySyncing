@@ -39,7 +39,10 @@ namespace EntitySyncingClient
 
         internal DBreezeEngine DBEngine = null;
 
-        internal Func<string, string, object, Task<HttpCapsule>> _serverSender = null;
+        /// <summary>
+        /// Url / payload
+        /// </summary>
+        internal Func<string, byte[], Task<byte[]>> _serverSender = null;
         internal Action _resetWebSession = null;
         internal Action _syncIsFinishing = null;
 
@@ -54,7 +57,7 @@ namespace EntitySyncingClient
         /// <param name="serverSender"></param>
         /// <param name="resetWebSession"></param>
         /// <param name="syncIsFinishing"></param>
-        public Engine(ILogger logger, DBreeze.DBreezeEngine dbEngine, Func<string, string, object, Task<HttpCapsule>> serverSender, Action resetWebSession, Action syncIsFinishing)
+        public Engine(ILogger logger, DBreeze.DBreezeEngine dbEngine, Func<string, byte[], Task<byte[]>> serverSender, Action resetWebSession, Action syncIsFinishing)
         {
             Logger.log = logger;
 

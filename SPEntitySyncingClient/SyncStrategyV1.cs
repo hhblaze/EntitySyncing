@@ -114,8 +114,9 @@ namespace EntitySyncingClient
             return syncList;
         }
 
-        public override bool UpdateLocalDatabase(List<SyncOperation> syncList, long newServerSyncTimeStamp)
+        public override bool UpdateLocalDatabase(ExchangeData exData) //(List<SyncOperation> syncList, long newServerSyncTimeStamp)
         {
+            
             var now = DateTime.UtcNow.Ticks;
             bool reRunSync = false;
 
@@ -127,15 +128,15 @@ namespace EntitySyncingClient
                 tran.ValuesLazyLoadingIsOn = false;
 
                 //tran.Insert(_entityTable, new byte[] { LocalSyncTS }, _newLocalSyncTimeStamp);
-                tran.Insert(_entitySync.entityTable, new byte[] { LocalSyncTS }, _newLocalSyncTimeStamp  > newServerSyncTimeStamp ? _newLocalSyncTimeStamp : newServerSyncTimeStamp);
-                tran.Insert(_entitySync.entityTable, new byte[] { ServerSyncTS }, newServerSyncTimeStamp);
+                tran.Insert(_entitySync.entityTable, new byte[] { LocalSyncTS }, _newLocalSyncTimeStamp  > exData.NewServerSyncTimeStamp ? _newLocalSyncTimeStamp : exData.NewServerSyncTimeStamp);
+                tran.Insert(_entitySync.entityTable, new byte[] { ServerSyncTS }, exData.NewServerSyncTimeStamp);
                 T entity;
                 T localEntity;
 
                 int processedBeforeRaise = 0;
 
                 
-                foreach (var opr in syncList.Where(r => r.Operation == SyncOperation.SetOperation(SyncOperation.eOperation.EXCHANGE)))
+                foreach (var opr in exData.SyncOperations.Where(r => r.Operation == SyncOperation.SetOperation(SyncOperation.eOperation.EXCHANGE)))
                 {
                     if (opr.ExternalId > 0)
                     {
@@ -163,8 +164,7 @@ namespace EntitySyncingClient
                 }
 
 
-
-                foreach (var opr in syncList.Where(r=>r.Operation != SyncOperation.SetOperation(SyncOperation.eOperation.EXCHANGE)))
+                foreach (var opr in exData.SyncOperations.Where(r=>r.Operation != SyncOperation.SetOperation(SyncOperation.eOperation.EXCHANGE)))
                 {
                     switch (opr.GetOperation())
                     {
@@ -234,47 +234,52 @@ namespace EntitySyncingClient
         public async Task<ESyncResult> SyncEntity()
         {
             try
-            {
-                var lastServerSyncTimeStamp = 0L;
-                List<SyncOperation> syncList;
+            {              
                 bool repeatSynchro;
+
+                var toServer = new ExchangeData();
 
                 using (var tran = SyncEngine.DBEngine.GetTransaction())
                 {
-                    syncList = this.GetSyncOperations(tran, out repeatSynchro);
-                    lastServerSyncTimeStamp = this.GetLastServerSyncTimeStamp(tran);
+                    toServer.SyncOperations = this.GetSyncOperations(tran, out repeatSynchro);
+                    toServer.LastServerSyncTimeStamp = this.GetLastServerSyncTimeStamp(tran);
                 }
 
-                Dictionary<string, byte[]> toServer = new Dictionary<string, byte[]>();
-                toServer.Add("LastServerSyncTimeStamp", lastServerSyncTimeStamp.To_8_bytes_array_BigEndian());
-                toServer.Add("SyncLst", syncList.SerializeProtobuf());
-                
+
+
                 //Sending Entities to server
                 //var httpCapsule = await _engine._serverSender("/modules.http.GM_PersonalDevice/IDT_Actions",
-                var httpCapsule = await SyncEngine._serverSender(_entitySync.urlSync,
-                 "{'Action':'SYNCHRONIZE_ENTITIES';'EntityType':'" + typeof(T).FullName + "'}", toServer.SerializeProtobuf());
 
-                if (httpCapsule == null)  //Synchro with error
+                var caps = new HttpCapsule
+                {
+                    Type = "{'Action':'SYNCHRONIZE_ENTITIES';'EntityType':'" + typeof(T).FullName + "'}",
+                    Body = toServer.BiserEncoder().Encode()
+                };
+
+                var httpCapsuleBt = await SyncEngine._serverSender(_entitySync.urlSync, caps.BiserEncoder().Encode());                
+
+                if (httpCapsuleBt == null)  //Synchro with error
                     return ESyncResult.ERROR;
+
+                var httpCapsule = HttpCapsule.BiserDecode(httpCapsuleBt);
+
+                //if (httpCapsule == null)  //Synchro with error
+                //    return ESyncResult.ERROR;
 
                 Dictionary<string, string> res = httpCapsule.Type.DeserializeJsonSimple();
 
                 if (res["Result"] == "OK")
                 {
 
-                    //Unpacking all 
-                    Dictionary<string, byte[]> fromServer = httpCapsule.Body.DeserializeProtobuf<Dictionary<string, byte[]>>();
+                    var exData = ExchangeData.BiserDecode(httpCapsule.Body);
 
-                    if (!repeatSynchro && fromServer["RepeatSynchro"][0] == 1)
+                    if (!repeatSynchro && exData.RepeatSynchro)
                         repeatSynchro = true;
 
-                    var syncListFromServer = fromServer["SyncLst"].DeserializeProtobuf<List<SyncOperation>>();
-                    var newServerSyncTimeStamp = fromServer["NewServerSyncTimeStamp"].To_Int64_BigEndian();
-
                     if(SyncEngine.Verbose)
-                        Console.WriteLine($"SyncEntity<{ typeof(T).Name }> ::: server returned {syncListFromServer.Count} items.");
+                        Console.WriteLine($"SyncEntity<{ typeof(T).Name }> ::: server returned {exData.SyncOperations?.Count} items.");
 
-                    if(this.UpdateLocalDatabase(syncListFromServer, newServerSyncTimeStamp))
+                    if(this.UpdateLocalDatabase(exData))
                     {
                         return await SyncEntity(); //this is a rare exeuting place, only in case if clientSideEntityID equals to existing serverSideEntityID, and even in this case it should be executed only once
                     }
@@ -282,8 +287,16 @@ namespace EntitySyncingClient
                 }
                 else if (res["Result"] == "AUTH FAILED")
                 {
-                    SyncEngine._resetWebSession?.Invoke();
-                    //WebService.Instance.ResetWebSession();
+                    if (SyncEngine._resetWebSession != null)
+                    {
+                        try
+                        {
+                            SyncEngine._resetWebSession?.Invoke();
+                        }
+                        catch
+                        {}                        
+                    }
+                    
                     return ESyncResult.AUTH_FAIL;
                 }
 
@@ -296,9 +309,8 @@ namespace EntitySyncingClient
             }
             catch (Exception ex)
             {
-                Logger.LogException("EntitySyncingClient.SyncStrategyV1", "SyncEntityWithUID", ex, $"type: {typeof(T).Name}");
+                Logger.LogException("EntitySyncingClient.SyncStrategyV1", "SyncEntity", ex, $"type: {typeof(T).Name}");
 
-                //Console.WriteLine($"SyncEntityWithUID<{ typeof(T).Name }> ::: {ex.ToString()}");
                 return ESyncResult.ERROR;
             }
 

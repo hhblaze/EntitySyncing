@@ -13,6 +13,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)EntitySyncingBaseV1.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ESyncResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\DictStrByteArr.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ExchangeData.Biser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ExchangeData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\HttpCapsule.Biser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\HttpCapsule.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ISyncEntity.cs" />

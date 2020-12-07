@@ -104,25 +104,51 @@ namespace EntitySyncingClientTester
         /// <param name="type"></param>
         /// <param name="body"></param>
         /// <returns></returns>
-        public async Task<EntitySyncingClient.HttpCapsule> SendToServer(string page, string type, object body)
+        public async Task<byte[]> SendToServer(string url, byte[] data)
         {
-            var capsIn= new EntitySyncing.HttpCapsule
+
+            //Data must be sent as POST by url.
+            //Server must receive it like this
+
+            byte[] returnData = null; //This should be returned to client
+
+            var httpCapsule = SyncEngine.GetPayload(data);            
+            switch (SyncEngine.GetEntity4Sync(httpCapsule))
             {
-                 Type = type,
-                  Body = (byte[])body
-            };
+                case "EntitySyncingClientTester.Entity_Task":
 
+                    returnData = SyncEngine.SyncEntityStrategyV1<Entity_Task_Server>(httpCapsule, new SyncEntity_Task_Server()
+                    {
+                        entityTable = "TaskSyncUser1",
+                        //entityContentTable - can be also setup
+                         
+                    }
+                    , new byte[] { 1, 1, 1, 1 } //user token
+                    , EntitySyncing.eSynchroDirectionType.Both, true);
 
-            var capsOut = SyncEngine.SyncEntityV1<Entity_Task_Server>(capsIn, new SyncEntity_Task_Server() { 
-                entityTable = "TaskSyncUser1" 
+                    return returnData;
+                default:
+                    //No such entity
+                    break;
+                
             }
-            , new byte[] { 1, 1, 1, 1 }, 
-            EntitySyncing.eSynchroDirectionType.Both, true); //new byte[] { 1, 1, 1, 1 } is user
+            return null;
 
-            return new EntitySyncingClient.HttpCapsule { 
-                Body = capsOut.Body,
-                Type = capsOut.Type
-            };
+            //foreach(var entity2sync in SyncEngine.GetEntities2Sync(data))
+            //{
+
+            //}
+
+            //var capsOut = SyncEngine.SyncEntityV1<Entity_Task_Server>(capsIn, new SyncEntity_Task_Server() { 
+            //    entityTable = "TaskSyncUser1" 
+            //}
+            //, new byte[] { 1, 1, 1, 1 }, 
+            //EntitySyncing.eSynchroDirectionType.Both, true); //new byte[] { 1, 1, 1, 1 } is user
+
+            //return new EntitySyncingClient.HttpCapsule { 
+            //    Body = capsOut.Body,
+            //    Type = capsOut.Type
+            //};
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -523,7 +549,8 @@ namespace EntitySyncingClientTester
 
         private void button14_Click(object sender, EventArgs e)
         {
-            var resbof = BiserObjectify.Generator.Run(typeof(EntitySyncing.SyncOperation), true,
+            return;
+            var resbof = BiserObjectify.Generator.Run(typeof(EntitySyncing.ExchangeData), true,
      @"H:\c\tmp\synchronizer\", forBiserBinary: true, forBiserJson: false, null);
 
             
