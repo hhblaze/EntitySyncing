@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Engine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EntitySyncingBaseV1.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SyncStrategyV1.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\ExchangeData.Biser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\ExchangeData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\HttpCapsule.Biser.cs" />

@@ -12,15 +12,6 @@
             <param name="logger">can be null</param>
             <param name=""></param>
         </member>
-        <member name="M:EntitySyncing.Engine.InsertIndex4SyncStrategyV1(DBreeze.Transactions.Transaction,System.String,EntitySyncing.ISyncEntity,System.Byte[],EntitySyncing.ISyncEntity)">
-            <summary>
-            Fills up index 200. Entity desired ID and SyncTimestamp must be specified.
-            Creation of transaction, synchronization of the table and transaction commit is outside of this function.
-            </summary>
-            <param name="table">where index 200 must be stored </param>
-            <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
-            <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
-        </member>
         <member name="M:EntitySyncing.EntitySyncingBaseV1`1.OnInsertEntity(`0,`0)">
             <summary>
             
@@ -65,6 +56,15 @@
             <summary>
             When transaction is closed
             </summary>
+        </member>
+        <member name="M:EntitySyncing.SyncStrategyV1`1.InsertIndex4Sync(DBreeze.Transactions.Transaction,System.String,EntitySyncing.ISyncEntity,System.Byte[],EntitySyncing.ISyncEntity)">
+            <summary>
+            Fills up index 200. Entity desired ID and SyncTimestamp must be specified.
+            Creation of transaction, synchronization of the table and transaction commit is outside of this function.
+            </summary>
+            <param name="table">where index 200 must be stored </param>
+            <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
+            <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
         </member>
         <member name="P:EntitySyncing.HttpCapsule.Type">
             <summary>

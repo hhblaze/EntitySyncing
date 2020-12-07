@@ -46,20 +46,20 @@ namespace EntitySyncing
             DBEngine = dbEngine;
         }
 
-        /// <summary>
-        /// Fills up index 200. Entity desired ID and SyncTimestamp must be specified.
-        /// Creation of transaction, synchronization of the table and transaction commit is outside of this function.
-        /// </summary>
-        /// <param name="table">where index 200 must be stored </param>
-        /// <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
-        /// <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
-        public void InsertIndex4SyncStrategyV1(DBreeze.Transactions.Transaction tran, string table, ISyncEntity entity, byte[] ptrEntityContent, ISyncEntity oldEntity)
-        {
-            if (oldEntity == null)
-                tran.Insert<byte[], byte[]>(table, 200.ToIndex(entity.Id), ptrEntityContent);
+        ///// <summary>
+        ///// Fills up index 200. Entity desired ID and SyncTimestamp must be specified.
+        ///// Creation of transaction, synchronization of the table and transaction commit is outside of this function.
+        ///// </summary>
+        ///// <param name="table">where index 200 must be stored </param>
+        ///// <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
+        ///// <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
+        //public void InsertIndex4SyncStrategyV1(DBreeze.Transactions.Transaction tran, string table, ISyncEntity entity, byte[] ptrEntityContent, ISyncEntity oldEntity)
+        //{
+        //    if (oldEntity == null)
+        //        tran.Insert<byte[], byte[]>(table, 200.ToIndex(entity.Id), ptrEntityContent);
 
-            tran.Insert<byte[], byte[]>(table, 201.ToIndex(entity.SyncTimestamp, entity.Id), null);
-        }
+        //    tran.Insert<byte[], byte[]>(table, 201.ToIndex(entity.SyncTimestamp, entity.Id), null);
+        //}
 
 
         public string GetEntity4Sync(HttpCapsule httpCapsule)

@@ -332,7 +332,7 @@ namespace EntitySyncingClientTester
                 pBlob = tran.InsertDataBlockWithFixedAddress<Entity_Task_Server>(table, pBlob, entity); //Entity is stored in the same table
 
                 //must be called to insert synchro indexes
-                SyncEngine.InsertIndex4SyncStrategyV1(tran, table, entity, pBlob, null);
+                EntitySyncing.SyncStrategyV1<Entity_Task_Server>.InsertIndex4Sync(tran, table, entity, pBlob, null);
 
                 tran.Commit();
             }
@@ -389,7 +389,7 @@ namespace EntitySyncingClientTester
                     tran.InsertDataBlockWithFixedAddress<Entity_Task_Server>(table, row.Value, newEnt); //Entity is stored in the same table
 
                     //must be called to insert synchro indexes
-                    SyncEngine.InsertIndex4SyncStrategyV1(tran, table, newEnt, row.Value, oldEnt);
+                    EntitySyncing.SyncStrategyV1<Entity_Task_Server>.InsertIndex4Sync(tran, table, newEnt, row.Value, oldEnt);                    
 
                     tran.Commit();
                 }
