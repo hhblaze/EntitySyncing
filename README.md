@@ -20,9 +20,9 @@ there are <a href = 'https://github.com/hhblaze/EntitySyncing/tree/main/EntitySy
 
 Synchronization is always initiated from the client.
 
-Entities can be synchronized in one of directions: both, from the client, from the server.
+Entities can be synchronized in one of the directions: both, from the client, from the server.
 
-<a href = 'https://docs.google.com/document/d/e/2PACX-1vR6sGM_HdMu_Wl-7n6FH3FvIowZWojxHfjxNBEg_BgHzU2XQCbI3jodugHFJ1SK-nowJGkVbkRwAisL/pub'  target='_blank'>Documentaion is available here</a> 
+<a href = 'https://docs.google.com/document/d/e/2PACX-1vR6sGM_HdMu_Wl-7n6FH3FvIowZWojxHfjxNBEg_BgHzU2XQCbI3jodugHFJ1SK-nowJGkVbkRwAisL/pub'  target='_blank'>Documentation is available here</a> 
 
 
 It's a free software for those who think that it should be free.
