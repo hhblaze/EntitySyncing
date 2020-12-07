@@ -107,7 +107,8 @@ namespace EntitySyncingClient
                 };
                 if (rowEntity.Exists)
                 {
-                    syncOperation.SerializedObject = rowEntity.GetDataBlockWithFixedAddress<T>().SerializeProtobuf();
+                    //syncOperation.SerializedObject = rowEntity.GetDataBlockWithFixedAddress<T>().SerializeProtobuf();
+                    syncOperation.SerializedObject = rowEntity.GetDataBlockWithFixedAddress<byte[]>();
                 }
                 syncList.Add(syncOperation);
             }
@@ -151,9 +152,10 @@ namespace EntitySyncingClient
                             
                             //New GeneratedID must be stored for the new sync
                             ((ISyncEntity)oldEntity).Id = opr.ExternalId; //Theoretically on this place can be called a user-function to get another ID type
-                            ((ISyncEntity)oldEntity).SyncTimestamp = ++now;                   
+                            ((ISyncEntity)oldEntity).SyncTimestamp = ++now;
 
-                            _entitySync.OnInsertEntity(oldEntity, default(T), oldEntity.SerializeProtobuf());
+                            //_entitySync.OnInsertEntity(oldEntity, default(T), oldEntity.SerializeProtobuf());
+                            _entitySync.OnInsertEntity(oldEntity, default(T), DBreeze.Utils.CustomSerializator.ByteArraySerializator(oldEntity));
 
                             InsertIndex4Sync(tran, _entitySync.entityTable, oldEntity, _entitySync.ptrContent, default(T));
 
@@ -175,7 +177,8 @@ namespace EntitySyncingClient
                                 //Possible update                             
                                 _entitySync.ptrContent = rowLocalEntity.Value;
                                 localEntity = rowLocalEntity.GetDataBlockWithFixedAddress<T>();
-                                entity = opr.SerializedObject.DeserializeProtobuf<T>();
+                                //entity = opr.SerializedObject.DeserializeProtobuf<T>();
+                                entity = (T)DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator(opr.SerializedObject, typeof(T));
 
                                 if (((ISyncEntity)localEntity).SyncTimestamp < opr.SyncTimestamp)
                                 {
@@ -193,7 +196,8 @@ namespace EntitySyncingClient
                             {
                                 //Inserting new entity from server                 
                                 _entitySync.ptrContent = null;
-                                entity = opr.SerializedObject.DeserializeProtobuf<T>();
+                               // entity = opr.SerializedObject.DeserializeProtobuf<T>();
+                                entity = (T)DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator(opr.SerializedObject, typeof(T));
                                 //opr.InternalId, 
                                 _entitySync.OnInsertEntity(entity, default(T), opr.SerializedObject);
                                 InsertIndex4Sync(tran, _entitySync.entityTable, entity, _entitySync.ptrContent, default(T));

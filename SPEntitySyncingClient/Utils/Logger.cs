@@ -25,4 +25,12 @@ namespace EntitySyncingClient
             log.LogException(className, methodName, ex, description);
         }
     }
+
+    public class LoggerWrapper : ILogger
+    {
+        public void LogException(string className, string methodName, Exception ex, string description)
+        {
+
+        }
+    }
 }

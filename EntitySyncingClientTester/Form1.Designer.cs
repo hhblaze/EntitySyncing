@@ -75,7 +75,7 @@ namespace EntitySyncingClientTester
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(492, 297);
+            this.button3.Location = new System.Drawing.Point(286, 380);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(143, 63);
             this.button3.TabIndex = 2;
@@ -222,7 +222,7 @@ namespace EntitySyncingClientTester
             // 
             // button11
             // 
-            this.button11.Location = new System.Drawing.Point(286, 380);
+            this.button11.Location = new System.Drawing.Point(492, 297);
             this.button11.Name = "button11";
             this.button11.Size = new System.Drawing.Size(167, 63);
             this.button11.TabIndex = 19;

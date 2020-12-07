@@ -31,6 +31,9 @@ namespace EntitySyncingClient
 
         }
 
+        /// <summary>
+        /// Will be set automatically and will be available in entity handler
+        /// </summary>
         public DBreeze.Transactions.Transaction tran = null;
         public string entityTable = "";
         /// <summary>

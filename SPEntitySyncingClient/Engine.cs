@@ -49,22 +49,32 @@ namespace EntitySyncingClient
         
         Dictionary<string, IEntityFold> lstToSync = new Dictionary<string, IEntityFold>();
 
+
+
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="logger"></param>
         /// <param name="dbEngine"></param>
         /// <param name="serverSender"></param>
         /// <param name="resetWebSession"></param>
         /// <param name="syncIsFinishing"></param>
-        public Engine(ILogger logger, DBreeze.DBreezeEngine dbEngine, Func<string, byte[], Task<byte[]>> serverSender, Action resetWebSession, Action syncIsFinishing)
+        /// <param name="logger">can be null</param>
+        public Engine(DBreeze.DBreezeEngine dbEngine, Func<string, byte[], Task<byte[]>> serverSender, Action resetWebSession, Action syncIsFinishing, ILogger logger)
         {
-            Logger.log = logger;
+            if (logger == null)
+                Logger.log = new LoggerWrapper();
+            else
+                Logger.log = logger;
 
             if (dbEngine == null)
             {
                 Logger.LogException("EntitySyncingClient.Engine", "Init", new Exception("DBreezeEngine is not specified"), "");
                 return;
+            }
+
+            if (DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator == null || DBreeze.Utils.CustomSerializator.ByteArraySerializator == null)
+            {
+                throw new Exception("EntitySyncingClient.Engine.Init: please supply for the DBreeze DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator && DBreeze.Utils.CustomSerializator.ByteArraySerializator");
             }
 
             DBEngine = dbEngine;

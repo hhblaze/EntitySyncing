@@ -19,10 +19,18 @@ namespace EntitySyncing
     {
         internal DBreezeEngine DBEngine = null;
 
-
-        public Engine(ILogger logger, DBreeze.DBreezeEngine dbEngine)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dbEngine"></param>
+        /// <param name="logger">can be null</param>
+        /// <param name=""></param>
+        public Engine(DBreeze.DBreezeEngine dbEngine, ILogger logger)
         {
-            Logger.log = logger;
+            if (logger == null)
+                Logger.log = new LoggerWrapper();
+            else
+                Logger.log = logger;
 
             if (dbEngine == null)
             {
@@ -30,17 +38,9 @@ namespace EntitySyncing
                 return;
             }
 
-            DBEngine = dbEngine;
-        }
-
-        public void Init(ILogger logger, DBreeze.DBreezeEngine dbEngine)
-        {
-            Logger.log = logger;
-
-            if (dbEngine == null)
+            if (DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator == null || DBreeze.Utils.CustomSerializator.ByteArraySerializator == null)
             {
-                Logger.LogException("EntitySyncing.Engine", "Init", new Exception("DBreezeEngine is not specified"), "");
-                return;
+                throw new Exception("EntitySyncing.Engine.Init: please supply for the DBreeze DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator && DBreeze.Utils.CustomSerializator.ByteArraySerializator");
             }
 
             DBEngine = dbEngine;
@@ -53,7 +53,7 @@ namespace EntitySyncing
         /// <param name="table">where index 200 must be stored </param>
         /// <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
         /// <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
-        public void InsertIndex4Sync(DBreeze.Transactions.Transaction tran, string table, ISyncEntity entity, byte[] ptrEntityContent, ISyncEntity oldEntity)
+        public void InsertIndex4SyncStrategyV1(DBreeze.Transactions.Transaction tran, string table, ISyncEntity entity, byte[] ptrEntityContent, ISyncEntity oldEntity)
         {
             if (oldEntity == null)
                 tran.Insert<byte[], byte[]>(table, 200.ToIndex(entity.Id), ptrEntityContent);
@@ -163,8 +163,8 @@ namespace EntitySyncing
                                             //We must update server side and put into entityLog
                                             //We don't return back this entity
 
-
-                                            newEntity = row.SerializedObject.DeserializeProtobuf<T>();
+                                            newEntity = (T)DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator(row.SerializedObject, typeof(T));
+                                            //newEntity = row.SerializedObject.DeserializeProtobuf<T>();
 
                                             ((ISyncEntity)newEntity).Id = row.InternalId; //just for a case
                                             ((ISyncEntity)newEntity).SyncTimestamp = row.SyncTimestamp;
@@ -202,7 +202,10 @@ namespace EntitySyncing
 
 
                                         //Insert new 
-                                        newEntity = row.SerializedObject.DeserializeProtobuf<T>();
+                                        //newEntity = row.SerializedObject.DeserializeProtobuf<T>();
+                                        newEntity = (T)DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator(row.SerializedObject, typeof(T));
+
+
                                         entitySync.ptrContent = null;
 
                                         //We want to leave timestamp from client if server time less then clients, for new items only

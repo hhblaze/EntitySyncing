@@ -6,6 +6,10 @@
     <AssemblyName>EntitySyncing</AssemblyName>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>H:\c\blaze_svn\Projects\GitHub\EntitySyncing\EntitySyncing.Net5\EntitySyncing.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="DBreeze" Version="1.95.0" />
     <PackageReference Include="protobuf-net" Version="3.0.73" />

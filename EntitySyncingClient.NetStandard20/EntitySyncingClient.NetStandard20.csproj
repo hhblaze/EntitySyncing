@@ -6,6 +6,10 @@
     <AssemblyName>EntitySyncingClient</AssemblyName>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>H:\c\blaze_svn\Projects\GitHub\EntitySyncing\EntitySyncingClient.NetStandard20\EntitySyncingClient.xml</DocumentationFile>
+  </PropertyGroup>
+
   <Import Project="..\SPEntitySyncingClient\SPEntitySyncingClient.projitems" Label="Shared" />
 
   <ItemGroup>

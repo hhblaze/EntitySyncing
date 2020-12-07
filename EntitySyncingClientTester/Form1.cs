@@ -28,22 +28,11 @@ namespace EntitySyncingClientTester
             InitSyncEngine();
         }
 
-        public class LoggerWrapper : EntitySyncingClient.ILogger
-        {
-            public void LogException(string className, string methodName, Exception ex, string description)
-            {
-              
-            }
-        }
 
         public static EntitySyncingClient.Engine SyncEngineClient = null;
         public static EntitySyncingClient.Engine SyncEngineClient2 = null;
         public static EntitySyncing.Engine SyncEngine = null;
 
-        EntitySyncingClient.ILogger LoggerClient = null;
-        EntitySyncing.ILogger Logger = null;
-
-        //EntitySyncingClient.ILogger Logger = null;
         DBreeze.DBreezeEngine DBEngineClient = null;
         DBreeze.DBreezeEngine DBEngineClient2 = null;
         DBreeze.DBreezeEngine DBEngine = null;
@@ -54,11 +43,11 @@ namespace EntitySyncingClientTester
             if (DBEngineClient != null)
                 return;
 
-
-            DBEngineClient = new DBreezeEngine(textBox1.Text); // @"H:\c\tmp\synchronizer\client");
-            DBEngineClient2 = new DBreezeEngine(textBox3.Text); // @"H:\c\tmp\synchronizer\client");
+            DBEngineClient = new DBreezeEngine(textBox1.Text); 
+            DBEngineClient2 = new DBreezeEngine(textBox3.Text);
             DBEngine = new DBreezeEngine(textBox4.Text);
             
+            //Specifying byte[] serializator / deserializator for DBreeze - it will be used internally by SyncEngines for deserializing incoming entites
             DBreeze.Utils.CustomSerializator.ByteArraySerializator = EntitySyncingClientTester.ProtobufSerializer.SerializeProtobuf;
             DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator = EntitySyncingClientTester.ProtobufSerializer.DeserializeProtobuf;
         }
@@ -69,19 +58,19 @@ namespace EntitySyncingClientTester
             if (SyncEngineClient != null)
                 return;
 
-            LoggerClient = new LoggerWrapper();
+           // LoggerClient = new LoggerWrapper();
 
             InitDBEngines();
 
-            SyncEngineClient = new EntitySyncingClient.Engine(LoggerClient, DBEngineClient, SendToServer, null, null);
-            SyncEngineClient2 = new EntitySyncingClient.Engine(LoggerClient, DBEngineClient2, SendToServer, null, null);
+            SyncEngineClient = new EntitySyncingClient.Engine(DBEngineClient, SendToServer, null, null, null);
+            SyncEngineClient2 = new EntitySyncingClient.Engine(DBEngineClient2, SendToServer, null, null, null);
 
-            SyncEngine = new EntitySyncing.Engine(Logger, DBEngine);
+            SyncEngine = new EntitySyncing.Engine(DBEngine, null);
 
             //Adding entites to be synced by this client
-            //This is usually a one time operation. 
-            //Entites will start to sync after calling
-            //await SyncEngineClient.SynchronizeEntities();
+            //This is usually a one time operation, that is done in the beginning of the program, all entites must be specified here. 
+            //Each time those entites will start to sync after calling: await SyncEngineClient.SynchronizeEntities();
+
             SyncEngineClient.AddEntity4Sync<Entity_Task>(new SyncEntity_Task_Client() { 
                 urlSync = "/modules.http.GM_PersonalDevice/IDT_Actions", 
                 entityTable = "Task1",
@@ -100,31 +89,37 @@ namespace EntitySyncingClientTester
         /// <summary>
         /// Emulates sending entity to server and returning back an aswer from the server
         /// </summary>
-        /// <param name="page"></param>
-        /// <param name="type"></param>
-        /// <param name="body"></param>
+        /// <param name="url"></param>
+        /// <param name="data"></param>
         /// <returns></returns>
         public async Task<byte[]> SendToServer(string url, byte[] data)
         {
 
-            //Data must be sent as POST by url.
+            //Data must be sent to server url by POST http method.
             //Server must receive it like this
 
-            byte[] returnData = null; //This should be returned to client
+            //Emulating server received that data on specified url:
 
-            var httpCapsule = SyncEngine.GetPayload(data);            
-            switch (SyncEngine.GetEntity4Sync(httpCapsule))
+            byte[] returnData = null; //This should be returned back to the client as a httpResponse.Content 
+
+            var payload = SyncEngine.GetPayload(data);        //data from POST    
+            switch (SyncEngine.GetEntity4Sync(payload))       //analyzing which entity came for synchronization
             {
                 case "EntitySyncingClientTester.Entity_Task":
 
-                    returnData = SyncEngine.SyncEntityStrategyV1<Entity_Task_Server>(httpCapsule, new SyncEntity_Task_Server()
+                    //Choosing Syncing strategy, instantiating new entity handler
+                    returnData = SyncEngine.SyncEntityStrategyV1(payload, new SyncEntity_Task_Server()
                     {
                         entityTable = "TaskSyncUser1",
                         //entityContentTable - can be also setup
                          
                     }
-                    , new byte[] { 1, 1, 1, 1 } //user token
-                    , EntitySyncing.eSynchroDirectionType.Both, true);
+                    //supplying user token (any user token (for example authenticated user information from websession) it will appear in handler (in this case SyncEntity_Task_Server) overrides)
+                    , new byte[] { 1, 1, 1, 1 } 
+                    //more setups about the entity
+                    , EntitySyncing.eSynchroDirectionType.Both, 
+                    //in case if server wants to fix some non-writable by client side fields
+                    entityMustBeReturnedBackToClientAfterCreation: true);
 
                     return returnData;
                 default:
@@ -133,22 +128,6 @@ namespace EntitySyncingClientTester
                 
             }
             return null;
-
-            //foreach(var entity2sync in SyncEngine.GetEntities2Sync(data))
-            //{
-
-            //}
-
-            //var capsOut = SyncEngine.SyncEntityV1<Entity_Task_Server>(capsIn, new SyncEntity_Task_Server() { 
-            //    entityTable = "TaskSyncUser1" 
-            //}
-            //, new byte[] { 1, 1, 1, 1 }, 
-            //EntitySyncing.eSynchroDirectionType.Both, true); //new byte[] { 1, 1, 1, 1 } is user
-
-            //return new EntitySyncingClient.HttpCapsule { 
-            //    Body = capsOut.Body,
-            //    Type = capsOut.Type
-            //};
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -351,7 +330,7 @@ namespace EntitySyncingClientTester
                 pBlob = tran.InsertDataBlockWithFixedAddress<Entity_Task_Server>(table, pBlob, entity); //Entity is stored in the same table
 
                 //must be called to insert synchro indexes
-                SyncEngine.InsertIndex4Sync(tran, table, entity, pBlob, null);
+                SyncEngine.InsertIndex4SyncStrategyV1(tran, table, entity, pBlob, null);
 
                 tran.Commit();
             }
@@ -408,7 +387,7 @@ namespace EntitySyncingClientTester
                     tran.InsertDataBlockWithFixedAddress<Entity_Task_Server>(table, row.Value, newEnt); //Entity is stored in the same table
 
                     //must be called to insert synchro indexes
-                    SyncEngine.InsertIndex4Sync(tran, table, newEnt, row.Value, oldEnt);
+                    SyncEngine.InsertIndex4SyncStrategyV1(tran, table, newEnt, row.Value, oldEnt);
 
                     tran.Commit();
                 }

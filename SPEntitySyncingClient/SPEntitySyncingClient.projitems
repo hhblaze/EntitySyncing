@@ -12,18 +12,16 @@
     <Compile Include="$(MSBuildThisFileDirectory)Engine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EntitySyncingBaseV1.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ESyncResult.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Utils\DictStrByteArr.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SyncStrategy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\ExchangeData.Biser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\ExchangeData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\HttpCapsule.Biser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\HttpCapsule.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ISyncEntity.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)JsonSimple.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\JsonSimple.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\Logger.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)ProtobufSerializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\SyncOperation.Biser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\SyncOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SyncStrategyV1.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)SyncStrategy.cs" />
   </ItemGroup>
 </Project>

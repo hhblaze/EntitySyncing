@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>EntitySyncing</name>
+    </assembly>
+    <members>
+        <member name="M:EntitySyncing.Engine.#ctor(DBreeze.DBreezeEngine,EntitySyncing.ILogger)">
+            <summary>
+            
+            </summary>
+            <param name="dbEngine"></param>
+            <param name="logger">can be null</param>
+            <param name=""></param>
+        </member>
+        <member name="M:EntitySyncing.Engine.InsertIndex4SyncStrategyV1(DBreeze.Transactions.Transaction,System.String,EntitySyncing.ISyncEntity,System.Byte[],EntitySyncing.ISyncEntity)">
+            <summary>
+            Fills up index 200. Entity desired ID and SyncTimestamp must be specified.
+            Creation of transaction, synchronization of the table and transaction commit is outside of this function.
+            </summary>
+            <param name="table">where index 200 must be stored </param>
+            <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
+            <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
+        </member>
+        <member name="M:EntitySyncing.EntitySyncingBaseV1`1.OnInsertEntity(`0,`0)">
+            <summary>
+            
+            </summary>
+            <param name="entityTable"></param>
+            <param name="entityKey"></param>
+            <param name="entity"></param>
+            <param name="oldEntity"></param>
+            <param name="newEntitySyncTimestamp"></param>
+            <returns>TRUE - indicates that incoming entity must be applied. FALSE means that this entity is not so strong by political reasons as server-side one and must be changed with server-side.</returns>
+        </member>
+        <member name="F:EntitySyncing.EntitySyncingBaseV1`1.entityContentTable">
+            <summary>
+            In case if value of the entity differs from the table where synchronizer holds data
+            </summary>
+        </member>
+        <member name="F:EntitySyncing.EntitySyncingBaseV1`1.ptrContent">
+            <summary>
+            Is set by synchronizer, in case if entity exists, then must be set from onInsertEntityFunction after repeat insert, refToValueDataBlockWithFixedAddress
+            </summary>
+        </member>
+        <member name="P:EntitySyncing.EntitySyncingBaseV1`1.GetEntityContentTable">
+            <summary>
+            Chooses between entityContentTable and entityTable
+            </summary>
+        </member>
+        <member name="M:EntitySyncing.EntitySyncingBaseV1`1.Init">
+            <summary>
+            Also responisble for Synchronize table, by default we synchronize only one master table, so we don't need extra tran.Synchronize tables
+            </summary>
+            <param name="tran"></param>
+            <param name="entityTable"></param>
+            <param name="companyId"></param>
+            <param name="syncOperations"></param>
+        </member>
+        <member name="M:EntitySyncing.EntitySyncingBaseV1`1.BeforeCommit">
+            <summary>
+            Right before tran.Commit()
+            </summary>
+        </member>
+        <member name="M:EntitySyncing.EntitySyncingBaseV1`1.AfterCommit">
+            <summary>
+            When transaction is closed
+            </summary>
+        </member>
+        <member name="P:EntitySyncing.HttpCapsule.Type">
+            <summary>
+            Type of the HTTP request/response . Default value is EMPTY
+            </summary>
+        </member>
+        <member name="P:EntitySyncing.HttpCapsule.Body">
+            <summary>
+            Serialized with protobuf some kind of an object, its type can be determined by Type
+            </summary>
+        </member>
+        <member name="P:EntitySyncing.ISyncEntity.Id">
+            <summary>
+            Must be always ID of the local storage (for Mobile - LocalID, for Server - ServerID)
+            </summary>
+        </member>
+        <member name="M:EntitySyncing.JsonSimple.SerializeDictionaryInternal(System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            
+            </summary>
+            <param name="dict"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EntitySyncing.JsonSimple.DeserializeJsonSimple(System.String)">
+            <summary>
+            EXAMPLE SUPPLY search right in the class
+            </summary>
+            <param name="json"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EntitySyncing.JsonSimple.ObjectParser">
+            <summary>
+            Parses signle value of type Object. Object starts from { and ends with }
+            </summary>
+        </member>
+        <member name="F:EntitySyncing.JsonSimple.ObjectParser.kvp">
+            <summary>
+            Self Key/Value pair
+            </summary>
+        </member>
+        <member name="F:EntitySyncing.JsonSimple.ObjectParser.MSB">
+            <summary>
+            Accumulator of self representation inside of json string (can be limited value due to different startFrom)
+            Will be not necessary in case of converting to real object
+            </summary>
+        </member>
+        <member name="P:EntitySyncing.SyncOperation.SyncTimestamp">
+            <summary>
+            TimeStamp when Entity operation has occured; Synchronization ID (for all entities inside of company)
+            </summary>
+        </member>
+        <member name="P:EntitySyncing.SyncOperation.SerializedObject">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:EntitySyncing.SyncOperation.Operation">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:EntitySyncing.SyncOperation.Type">
+            <summary>
+            Entity type
+            </summary>
+        </member>
+        <member name="P:EntitySyncing.SyncOperation.InternalId">
+            <summary>
+            Roles as UID (for disconnected unique IDs)
+            Internal ID of the entity in disconnected client (External ID is unified entity ID on the server).
+            0 if not set
+            </summary>
+        </member>
+        <member name="P:EntitySyncing.SyncOperation.ExternalId">
+            <summary>
+            Server side ID
+            </summary>
+        </member>
+    </members>
+</doc>
