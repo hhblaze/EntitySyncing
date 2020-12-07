@@ -15,7 +15,7 @@ User can install such APP on several own mobile devices.
 and both must be configured.
 
 The transfer data mechanizm is not implemented in this project (let's imagine that there is an open tcp/http channel between clients and the server), 
-there are examples how to supply incoming data from the client to server and which data to supply back and run it on the client.
+there are <a href = 'https://github.com/hhblaze/EntitySyncing/tree/main/EntitySyncingClientTester/'  target='_blank'>examples</a> how to supply incoming data from the client to server and which data to supply back and run it on the client.
 
 Synchronization is always initiated from the client.
 
