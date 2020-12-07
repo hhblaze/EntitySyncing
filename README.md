@@ -2,8 +2,9 @@
 
 [![NuGet Badge](https://buildstats.info/nuget/EntitySyncingServer)](https://www.nuget.org/packages/EntitySyncingServer/)
 [![NuGet Badge](https://buildstats.info/nuget/EntitySyncingClient)](https://www.nuget.org/packages/EntitySyncingClient/)
+[![Image of Build](https://img.shields.io/badge/Powered%20by-tiesky.com-1883F5.svg)](https://tiesky.com)
 
-Synchronizes entities between the server and the clients, using DBreeze techniques (made for .NET C# Xamarin Core Stabdard).
+Synchronizes entities between the server and the clients, using <a href = 'https://github.com/hhblaze/DBreeze/'  target='_blank'>DBreeze</a> techniques (made for .NET C# Xamarin Core Stabdard).
 
 Typical case is a mobile application (APP) that wants to have in a local database a list of TODO-tasks for the concrete user.
 Local database gives an ability to read and create tasks being offline from the server.
