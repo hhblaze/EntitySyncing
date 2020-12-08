@@ -29,12 +29,14 @@
             <summary>
             
             </summary>
-            <param name="entityTable"></param>
-            <param name="entityKey"></param>
             <param name="entity"></param>
-            <param name="oldEntity"></param>
-            <param name="newEntitySyncTimestamp"></param>
+            <param name="oldEntity"></param>        
             <returns>TRUE - indicates that incoming entity must be applied. FALSE means that this entity is not so strong by political reasons as server-side one and must be changed with server-side.</returns>
+        </member>
+        <member name="F:EntitySyncing.EntitySyncingBaseV1`1.tran">
+            <summary>
+            Will be set automatically and will be available in entity handler
+            </summary>
         </member>
         <member name="F:EntitySyncing.EntitySyncingBaseV1`1.entityContentTable">
             <summary>
@@ -51,15 +53,6 @@
             Chooses between entityContentTable and entityTable
             </summary>
         </member>
-        <member name="M:EntitySyncing.EntitySyncingBaseV1`1.Init">
-            <summary>
-            Also responisble for Synchronize table, by default we synchronize only one master table, so we don't need extra tran.Synchronize tables
-            </summary>
-            <param name="tran"></param>
-            <param name="entityTable"></param>
-            <param name="companyId"></param>
-            <param name="syncOperations"></param>
-        </member>
         <member name="M:EntitySyncing.EntitySyncingBaseV1`1.BeforeCommit">
             <summary>
             Right before tran.Commit()
@@ -72,17 +65,14 @@
         </member>
         <member name="M:EntitySyncing.SyncStrategyV1`1.InsertIndex4Sync(DBreeze.Transactions.Transaction,System.String,EntitySyncing.ISyncEntity,System.Byte[],EntitySyncing.ISyncEntity)">
             <summary>
-            Fills up index 200. Entity desired ID and SyncTimestamp must be specified.
-            Creation of transaction, synchronization of the table and transaction commit is outside of this function.
+            Fills up index 200. Creation of transaction, synchronization of the table and transaction commit is outside of this function.
+            Entity desired ID and SyncTimestamp must be specified
             </summary>
-            <param name="table">where index 200 must be stored </param>
+            <param name="tran"></param>
+            <param name="table">Where must be stored index 200</param>
             <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
             <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
-        </member>
-        <member name="P:EntitySyncing.ISyncEntity.Id">
-            <summary>
-            Must be always ID of the local storage (for Mobile - LocalID, for Server - ServerID)
-            </summary>
+            <param name="oldEntity">old instance of the entity from DB</param>
         </member>
         <member name="P:EntitySyncing.SyncOperation.SyncTimestamp">
             <summary>

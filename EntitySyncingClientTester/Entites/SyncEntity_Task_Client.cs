@@ -18,7 +18,7 @@ namespace EntitySyncingClientTester
             //this.entityTable
             //this.GetContentTable
             //this.SyncingEngine
-            //this.ptrContent
+            //this.ptrContent            
 
             //Here extra DBreeze transaction tables can be synchronized (this.entityTable and probably this.entityContentTable (if it differes) must be also added in the SynchronizeTables)
 

@@ -91,12 +91,10 @@ namespace EntitySyncingClient
             {
                 try
                 {
-
-                }
-                catch
-                {
                     SyncProcess?.Invoke(System.Threading.Interlocked.Read(ref SyncOperationsCount));
                 }
+                catch
+                {}
                 
             }
         }
@@ -125,7 +123,7 @@ namespace EntitySyncingClient
         }
 
         /// <summary>
-        /// 
+        /// Adds entity 4 sync of StrategyV1
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="table"></param>
@@ -178,6 +176,7 @@ namespace EntitySyncingClient
                 {
                     InEntitySynchro = false;
                 }
+
                 try
                 {
                     SyncStopped?.Invoke(null);
@@ -186,7 +185,6 @@ namespace EntitySyncingClient
 
             };
 
-            //var userId = User.Profile.ID;
             try
             {
                 SyncStarted?.Invoke();
@@ -201,23 +199,13 @@ namespace EntitySyncingClient
 
                 System.Threading.Interlocked.Exchange(ref SyncOperationsCount, 0);
 
-                //V2 sync strategy entities
 
-
+                //Running syncing strategies on all supplied entites
                 foreach (var e2s in lstToSync)
                 {      
                     lt.Add(Sync(e2s.Value));
                 }
                
-
-                //lt.Add(Sync(
-                //   new SyncStrategyV1<TaskDescriptionTemplate>(DBConstants.Table_TaskDescrTemplates(userId), new SyncTaskDescriptionTemplates())
-                //   ));
-
-                //lt.Add(Sync(
-                //  new SyncStrategyV1<GM_IDoThings.Article>(DBConstants.Table_TaskArticles(userId), new SyncArticles())
-                //  ));
-
 
 
                 await System.Threading.Tasks.Task.WhenAll(lt);
@@ -267,24 +255,9 @@ namespace EntitySyncingClient
 
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <typeparam name="T"></typeparam>
-        ///// <param name="syncStrategy"></param>
-        ///// <param name="serverSender"></param>
-        ///// <returns></returns>
-        //async System.Threading.Tasks.Task<ESyncResult> Sync<T>(SyncStrategy<T> syncStrategy)
-        //{
-        //    var mres = ESyncResult.ERROR;
-        //    while ((mres = await SyncEntityWithUID(syncStrategy)) == ESyncResult.REPEAT);
-        //    return mres;
-        //}
-
         async System.Threading.Tasks.Task<ESyncResult> Sync(IEntityFold syncStrategy)
         {
             var mres = ESyncResult.ERROR;
-            //while ((mres = await SyncEntityWithUID(syncStrategy)) == ESyncResult.REPEAT) ;
             while ((mres = await syncStrategy.Sync()) == ESyncResult.REPEAT) ;
             return mres;
         }

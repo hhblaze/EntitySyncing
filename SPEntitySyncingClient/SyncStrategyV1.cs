@@ -37,14 +37,13 @@ namespace EntitySyncingClient
             if (oldEntity == null)
                 tran.Insert<byte[], byte[]>(table, 200.ToIndex(ent.Id), ptrEntityContent);
 
-            //Adding to value one byte (17) indicating that this is a new entity
+            //Adding to value one byte indicating that this is a new entity
             tran.Insert<byte[], byte[]>(table, 201.ToIndex(ent.SyncTimestamp, ent.Id), (oldEntity == null) ? new byte[] { 1 } : null);
         }
 
-        public SyncStrategyV1(EntitySyncingBaseV1<T> entitySync)//:base(entitySync.entityTable)
+        public SyncStrategyV1(EntitySyncingBaseV1<T> entitySync)
         {            
             _entitySync = entitySync;
-            //this._urlSync = entitySync.UrlSync;
         }
 
         public override long GetLastServerSyncTimeStamp(DBreeze.Transactions.Transaction tran)
@@ -106,8 +105,7 @@ namespace EntitySyncingClient
                     SyncTimestamp = ent.Value.Item1
                 };
                 if (rowEntity.Exists)
-                {
-                    //syncOperation.SerializedObject = rowEntity.GetDataBlockWithFixedAddress<T>().SerializeProtobuf();
+                {                    
                     syncOperation.SerializedObject = rowEntity.GetDataBlockWithFixedAddress<byte[]>();
                 }
                 syncList.Add(syncOperation);
@@ -127,8 +125,7 @@ namespace EntitySyncingClient
                 _entitySync.tran = tran;
                 _entitySync.Init();
                 tran.ValuesLazyLoadingIsOn = false;
-
-                //tran.Insert(_entityTable, new byte[] { LocalSyncTS }, _newLocalSyncTimeStamp);
+                                
                 tran.Insert(_entitySync.entityTable, new byte[] { LocalSyncTS, 1 }, _newLocalSyncTimeStamp  > exData.NewServerSyncTimeStamp ? _newLocalSyncTimeStamp : exData.NewServerSyncTimeStamp);
                 tran.Insert(_entitySync.entityTable, new byte[] { ServerSyncTS, 2 }, exData.NewServerSyncTimeStamp);
                 T entity;
@@ -152,9 +149,8 @@ namespace EntitySyncingClient
                             
                             //New GeneratedID must be stored for the new sync
                             ((ISyncEntity)oldEntity).Id = opr.ExternalId; //Theoretically on this place can be called a user-function to get another ID type
-                            ((ISyncEntity)oldEntity).SyncTimestamp = ++now;                            
+                            ((ISyncEntity)oldEntity).SyncTimestamp = ++now;  //must be returned back, overriding SyncTimeStamp         
                             
-                            //_entitySync.OnInsertEntity(oldEntity, default(T), oldEntity.SerializeProtobuf());
                             _entitySync.OnInsertEntity(oldEntity, default(T), DBreeze.Utils.CustomSerializator.ByteArraySerializator(oldEntity), opr.InternalId);
 
                             InsertIndex4Sync(tran, _entitySync.entityTable, oldEntity, _entitySync.ptrContent, default(T));
@@ -177,7 +173,7 @@ namespace EntitySyncingClient
                                 //Possible update                             
                                 _entitySync.ptrContent = rowLocalEntity.Value;
                                 localEntity = rowLocalEntity.GetDataBlockWithFixedAddress<T>();
-                                //entity = opr.SerializedObject.DeserializeProtobuf<T>();
+                                
                                 entity = (T)DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator(opr.SerializedObject, typeof(T));
 
                                 if (((ISyncEntity)localEntity).SyncTimestamp < opr.SyncTimestamp)
@@ -189,7 +185,7 @@ namespace EntitySyncingClient
                                 }
                                 else
                                 {
-                                    //  Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                                    ////------------Nothing
                                 }
                             }
                             else

@@ -56,11 +56,10 @@ namespace EntitySyncingClient
         /// </summary>
         public string urlSync = String.Empty;
 
-        //public virtual void Init(DBreeze.Transactions.Transaction tran)
+      
         public virtual void Init()
         {
-            //this.tran = tran;
-            //this.entityTable = entityTable;
+
         }
 
 

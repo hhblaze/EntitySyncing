@@ -36,7 +36,7 @@
         </member>
         <member name="M:EntitySyncingClient.Engine.AddEntity4Sync``1(EntitySyncingClient.EntitySyncingBaseV1{``0})">
             <summary>
-            
+            Adds entity 4 sync of StrategyV1
             </summary>
             <typeparam name="T"></typeparam>
             <param name="table"></param>

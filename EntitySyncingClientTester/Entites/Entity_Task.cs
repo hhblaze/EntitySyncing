@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 
 namespace EntitySyncingClientTester
 {  
-    public partial class Entity_Task : EntitySyncingClient.ISyncEntity
-    {
-        
-    }
+   
 
     [ProtoBuf.ProtoContract]
     public partial class Entity_Task
@@ -28,9 +25,17 @@ namespace EntitySyncingClientTester
         public string Description { get; set; }
     }
 
+    /// <summary>
+    /// Add on the client-side together with entity itself
+    /// </summary>
+    public partial class Entity_Task : EntitySyncingClient.ISyncEntity
+    {
+
+    }
+
 
     ///// <summary>
-    ///// Must be unremarked and Entity_Task_Server must be remarked on the server-side, having in both client and server one entity
+    ///// !!!!!!!!!!!! Add on the client-side together with entity itself
     ///// </summary>
     //public partial class Entity_Task : Entity_Task, EntitySyncing.ISyncEntity
     //{
@@ -38,6 +43,7 @@ namespace EntitySyncingClientTester
     //}
 
     /// <summary>
+    /// HERER IT IS ONLY FOR EMULATING REASONS
     /// For emulating reasons inside the same project entity receives another name Entity_Task_Server. 
     /// </summary>
     [ProtoBuf.ProtoContract]
