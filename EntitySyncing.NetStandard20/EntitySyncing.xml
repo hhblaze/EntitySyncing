@@ -12,6 +12,19 @@
             <param name="logger">can be null</param>
             <param name=""></param>
         </member>
+        <member name="M:EntitySyncing.Engine.GetPayload(System.Byte[])">
+            <summary>
+            
+            </summary>
+            <param name="httpCapsule"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EntitySyncing.Engine.GetAuthFailed">
+            <summary>
+            GEnerates return to the client that its user authorization has failed
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:EntitySyncing.EntitySyncingBaseV1`1.OnInsertEntity(`0,`0)">
             <summary>
             
@@ -66,49 +79,9 @@
             <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
             <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
         </member>
-        <member name="P:EntitySyncing.HttpCapsule.Type">
-            <summary>
-            Type of the HTTP request/response . Default value is EMPTY
-            </summary>
-        </member>
-        <member name="P:EntitySyncing.HttpCapsule.Body">
-            <summary>
-            Serialized with protobuf some kind of an object, its type can be determined by Type
-            </summary>
-        </member>
         <member name="P:EntitySyncing.ISyncEntity.Id">
             <summary>
             Must be always ID of the local storage (for Mobile - LocalID, for Server - ServerID)
-            </summary>
-        </member>
-        <member name="M:EntitySyncing.JsonSimple.SerializeDictionaryInternal(System.Collections.Generic.Dictionary{System.String,System.String})">
-            <summary>
-            
-            </summary>
-            <param name="dict"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EntitySyncing.JsonSimple.DeserializeJsonSimple(System.String)">
-            <summary>
-            EXAMPLE SUPPLY search right in the class
-            </summary>
-            <param name="json"></param>
-            <returns></returns>
-        </member>
-        <member name="T:EntitySyncing.JsonSimple.ObjectParser">
-            <summary>
-            Parses signle value of type Object. Object starts from { and ends with }
-            </summary>
-        </member>
-        <member name="F:EntitySyncing.JsonSimple.ObjectParser.kvp">
-            <summary>
-            Self Key/Value pair
-            </summary>
-        </member>
-        <member name="F:EntitySyncing.JsonSimple.ObjectParser.MSB">
-            <summary>
-            Accumulator of self representation inside of json string (can be limited value due to different startFrom)
-            Will be not necessary in case of converting to real object
             </summary>
         </member>
         <member name="P:EntitySyncing.SyncOperation.SyncTimestamp">

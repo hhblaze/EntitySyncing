@@ -17,7 +17,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utils\HttpCapsule.Biser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\HttpCapsule.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ISyncEntity.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Utils\JsonSimple.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\Logger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\SyncOperation.Biser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\SyncOperation.cs" />

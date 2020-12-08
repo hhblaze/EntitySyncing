@@ -11,8 +11,8 @@ namespace EntitySyncingClient
     {
         private const int Entity = 200;
         private const int SyncLog = 201;
-        private const int LocalSyncTS = 205;
-        private const int ServerSyncTS = 206;
+        private const int LocalSyncTS = 202; //202 1
+        private const int ServerSyncTS = 202; //202 2
 
         public Engine SyncEngine { get; set; }        
 
@@ -49,7 +49,7 @@ namespace EntitySyncingClient
 
         public override long GetLastServerSyncTimeStamp(DBreeze.Transactions.Transaction tran)
         {
-            return tran.Select<byte[], long>(_entitySync.entityTable, new byte[] { ServerSyncTS }).Value;      // returns 0 if row does not exist
+            return tran.Select<byte[], long>(_entitySync.entityTable, new byte[] { ServerSyncTS, 2 }).Value;      // returns 0 if row does not exist
         }
 
         public override List<SyncOperation> GetSyncOperations(DBreeze.Transactions.Transaction tran, out bool repeatSync)
@@ -61,7 +61,7 @@ namespace EntitySyncingClient
             var changedEntities = new Dictionary<long, Tuple<long,bool>>();    //Key is entityId, Value is Synctimestamp
             var entityType = typeof(T).FullName;
 
-            var lastLocalSyncTimeStamp = tran.Select<byte[], long>(_entitySync.entityTable, new byte[] { LocalSyncTS }).Value;
+            var lastLocalSyncTimeStamp = tran.Select<byte[], long>(_entitySync.entityTable, new byte[] { LocalSyncTS, 1 }).Value;
 
             foreach (var row in
                 tran.SelectForwardFromTo<byte[], byte[]>(_entitySync.entityTable,
@@ -101,7 +101,7 @@ namespace EntitySyncingClient
                 {
                     ExternalId = ent.Value.Item2 ? 0 : ent.Key, //if entity new ExternalId will be 0 otherwise will equal to InternalId and higher than 0
                     InternalId = ent.Key,
-                    Operation = rowEntity.Exists ? SyncOperation.SetOperation(SyncOperation.eOperation.INSERT) : SyncOperation.SetOperation(SyncOperation.eOperation.REMOVE),
+                    Operation = rowEntity.Exists ? SyncOperation.eOperation.INSERT : SyncOperation.eOperation.REMOVE,
                     Type = entityType,
                     SyncTimestamp = ent.Value.Item1
                 };
@@ -129,15 +129,15 @@ namespace EntitySyncingClient
                 tran.ValuesLazyLoadingIsOn = false;
 
                 //tran.Insert(_entityTable, new byte[] { LocalSyncTS }, _newLocalSyncTimeStamp);
-                tran.Insert(_entitySync.entityTable, new byte[] { LocalSyncTS }, _newLocalSyncTimeStamp  > exData.NewServerSyncTimeStamp ? _newLocalSyncTimeStamp : exData.NewServerSyncTimeStamp);
-                tran.Insert(_entitySync.entityTable, new byte[] { ServerSyncTS }, exData.NewServerSyncTimeStamp);
+                tran.Insert(_entitySync.entityTable, new byte[] { LocalSyncTS, 1 }, _newLocalSyncTimeStamp  > exData.NewServerSyncTimeStamp ? _newLocalSyncTimeStamp : exData.NewServerSyncTimeStamp);
+                tran.Insert(_entitySync.entityTable, new byte[] { ServerSyncTS, 2 }, exData.NewServerSyncTimeStamp);
                 T entity;
                 T localEntity;
 
                 int processedBeforeRaise = 0;
 
-                
-                foreach (var opr in exData.SyncOperations.Where(r => r.Operation == SyncOperation.SetOperation(SyncOperation.eOperation.EXCHANGE)))
+                //Taking care changed IDs by server
+                foreach (var opr in exData.SyncOperations.Where(r => r.Operation == SyncOperation.eOperation.EXCHANGE))
                 {
                     if (opr.ExternalId > 0)
                     {
@@ -147,15 +147,15 @@ namespace EntitySyncingClient
                         {
                             var oldEntity = rowLocalEntity.GetDataBlockWithFixedAddress<T>();
 
-                            //Setting value from the server to this ID
+                            //Setting value from the server to this ID (real entity that must belong to that id)
                             tran.InsertDataBlockWithFixedAddress<byte[]>(_entitySync.GetEntityContentTable, rowLocalEntity.Value, opr.SerializedObject);
                             
                             //New GeneratedID must be stored for the new sync
                             ((ISyncEntity)oldEntity).Id = opr.ExternalId; //Theoretically on this place can be called a user-function to get another ID type
-                            ((ISyncEntity)oldEntity).SyncTimestamp = ++now;
-
+                            ((ISyncEntity)oldEntity).SyncTimestamp = ++now;                            
+                            
                             //_entitySync.OnInsertEntity(oldEntity, default(T), oldEntity.SerializeProtobuf());
-                            _entitySync.OnInsertEntity(oldEntity, default(T), DBreeze.Utils.CustomSerializator.ByteArraySerializator(oldEntity));
+                            _entitySync.OnInsertEntity(oldEntity, default(T), DBreeze.Utils.CustomSerializator.ByteArraySerializator(oldEntity), opr.InternalId);
 
                             InsertIndex4Sync(tran, _entitySync.entityTable, oldEntity, _entitySync.ptrContent, default(T));
 
@@ -165,10 +165,10 @@ namespace EntitySyncingClient
                  
                 }
 
-
-                foreach (var opr in exData.SyncOperations.Where(r=>r.Operation != SyncOperation.SetOperation(SyncOperation.eOperation.EXCHANGE)))
+                //standard entites
+                foreach (var opr in exData.SyncOperations.Where(r=>r.Operation != SyncOperation.eOperation.EXCHANGE))
                 {
-                    switch (opr.GetOperation())
+                    switch (opr.Operation)
                     {
                         case SyncOperation.eOperation.INSERT:
                             var rowLocalEntity = tran.Select<byte[], byte[]>(_entitySync.entityTable, new byte[] { Entity }.Concat(opr.InternalId.To_8_bytes_array_BigEndian()));
@@ -183,7 +183,7 @@ namespace EntitySyncingClient
                                 if (((ISyncEntity)localEntity).SyncTimestamp < opr.SyncTimestamp)
                                 {
                                     //Local version is weaker then server version                       
-                                    _entitySync.OnInsertEntity(entity, localEntity, opr.SerializedObject);
+                                    _entitySync.OnInsertEntity(entity, localEntity, opr.SerializedObject, 0);
 
                                     InsertIndex4Sync(tran, _entitySync.entityTable, entity, _entitySync.ptrContent, localEntity);
                                 }
@@ -198,8 +198,8 @@ namespace EntitySyncingClient
                                 _entitySync.ptrContent = null;
                                // entity = opr.SerializedObject.DeserializeProtobuf<T>();
                                 entity = (T)DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator(opr.SerializedObject, typeof(T));
-                                //opr.InternalId, 
-                                _entitySync.OnInsertEntity(entity, default(T), opr.SerializedObject);
+                                
+                                _entitySync.OnInsertEntity(entity, default(T), opr.SerializedObject, 0);
                                 InsertIndex4Sync(tran, _entitySync.entityTable, entity, _entitySync.ptrContent, default(T));
 
                             }
@@ -256,7 +256,8 @@ namespace EntitySyncingClient
 
                 var caps = new HttpCapsule
                 {
-                    Type = "{'Action':'SYNCHRONIZE_ENTITIES';'EntityType':'" + typeof(T).FullName + "'}",
+                    Action = "SYNC",
+                    EntityType = typeof(T).FullName,                    
                     Body = toServer.BiserEncoder().Encode()
                 };
 
@@ -270,9 +271,9 @@ namespace EntitySyncingClient
                 //if (httpCapsule == null)  //Synchro with error
                 //    return ESyncResult.ERROR;
 
-                Dictionary<string, string> res = httpCapsule.Type.DeserializeJsonSimple();
+                //Dictionary<string, string> res = httpCapsule.Type.DeserializeJsonSimple();
 
-                if (res["Result"] == "OK")
+                if (httpCapsule.IsOk)
                 {
 
                     var exData = ExchangeData.BiserDecode(httpCapsule.Body);
@@ -289,7 +290,7 @@ namespace EntitySyncingClient
                     }
 
                 }
-                else if (res["Result"] == "AUTH FAILED")
+                else if (!httpCapsule.IsOk && httpCapsule.Action == "AUTH FAILED")
                 {
                     if (SyncEngine._resetWebSession != null)
                     {

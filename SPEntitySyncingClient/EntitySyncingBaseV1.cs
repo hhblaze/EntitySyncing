@@ -11,12 +11,11 @@ namespace EntitySyncingClient
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="entityTable"></param>
-        /// <param name="entityKey"></param>
-        /// <param name="entityValue"></param>
+        /// <param name="entity"></param>
         /// <param name="oldEntity"></param>
-        /// <param name="nonDeserializedEntity">Very important save exactly this entity, because it must have more properties then not updated client</param>
-        public virtual void OnInsertEntity(T entity, T oldEntity, byte[] nonDeserializedEntity)
+        /// <param name="nonDeserializedEntity"></param>
+        /// <param name="changedID">contains old ID of the entity after server changed it</param>
+        public virtual void OnInsertEntity(T entity, T oldEntity, byte[] nonDeserializedEntity, long changedID)
         {
 
         }

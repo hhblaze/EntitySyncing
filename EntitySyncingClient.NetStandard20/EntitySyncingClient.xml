@@ -42,15 +42,14 @@
             <param name="table"></param>
             <param name="entity"></param>
         </member>
-        <member name="M:EntitySyncingClient.EntitySyncingBaseV1`1.OnInsertEntity(`0,`0,System.Byte[])">
+        <member name="M:EntitySyncingClient.EntitySyncingBaseV1`1.OnInsertEntity(`0,`0,System.Byte[],System.Int64)">
             <summary>
             
             </summary>
-            <param name="entityTable"></param>
-            <param name="entityKey"></param>
-            <param name="entityValue"></param>
+            <param name="entity"></param>
             <param name="oldEntity"></param>
-            <param name="nonDeserializedEntity">Very important save exactly this entity, because it must have more properties then not updated client</param>
+            <param name="nonDeserializedEntity"></param>
+            <param name="changedID">contains old ID of the entity after server changed it</param>
         </member>
         <member name="F:EntitySyncingClient.EntitySyncingBaseV1`1.tran">
             <summary>
@@ -72,49 +71,9 @@
             Example "/modules.http.GM_PersonalDevice/IDT_Actions"
             </summary>
         </member>
-        <member name="P:EntitySyncingClient.HttpCapsule.Type">
-            <summary>
-            Type of the HTTP request/response . Default value is EMPTY
-            </summary>
-        </member>
-        <member name="P:EntitySyncingClient.HttpCapsule.Body">
-            <summary>
-            Serialized with protobuf some kind of an object, its type can be determined by Type
-            </summary>
-        </member>
         <member name="P:EntitySyncingClient.ISyncEntity.Id">
             <summary>
             Must be always ID of the local storage (for Mobile - LocalID, for Server - ServerID)
-            </summary>
-        </member>
-        <member name="M:EntitySyncingClient.JsonSimple.SerializeDictionaryInternal(System.Collections.Generic.Dictionary{System.String,System.String})">
-            <summary>
-            
-            </summary>
-            <param name="dict"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EntitySyncingClient.JsonSimple.DeserializeJsonSimple(System.String)">
-            <summary>
-            EXAMPLE SUPPLY search right in the class
-            </summary>
-            <param name="json"></param>
-            <returns></returns>
-        </member>
-        <member name="T:EntitySyncingClient.JsonSimple.ObjectParser">
-            <summary>
-            Parses signle value of type Object. Object starts from { and ends with }
-            </summary>
-        </member>
-        <member name="F:EntitySyncingClient.JsonSimple.ObjectParser.kvp">
-            <summary>
-            Self Key/Value pair
-            </summary>
-        </member>
-        <member name="F:EntitySyncingClient.JsonSimple.ObjectParser.MSB">
-            <summary>
-            Accumulator of self representation inside of json string (can be limited value due to different startFrom)
-            Will be not necessary in case of converting to real object
             </summary>
         </member>
         <member name="P:EntitySyncingClient.SyncOperation.SyncTimestamp">

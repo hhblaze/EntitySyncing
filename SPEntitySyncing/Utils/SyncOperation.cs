@@ -14,21 +14,21 @@ namespace EntitySyncing
             EXCHANGE 
         }
 
-        public eOperation GetOperation()
-        {
-            return (eOperation)Operation;
-        }
+        //public eOperation GetOperation()
+        //{
+        //    return (eOperation)Operation;
+        //}
 
-        public static int SetOperation(eOperation operation)
-        {
-            return (int)operation;
-        }
+        //public static int SetOperation(eOperation operation)
+        //{
+        //    return (int)operation;
+        //}
 
         public SyncOperation()
         {
-        //Operation = eOperation.INSERT;
-        Operation = 1;
-        SyncTimestamp = 0;
+            Operation = eOperation.INSERT;
+            //Operation = 1;
+            SyncTimestamp = 0;
             SerializedObject = null;
             InternalId = 0;
             ExternalId = 0;
@@ -51,7 +51,7 @@ namespace EntitySyncing
         /// 
         /// </summary>
       
-        public int Operation { get; set; }
+        public eOperation Operation { get; set; }
 
         /// <summary>
         /// Entity type

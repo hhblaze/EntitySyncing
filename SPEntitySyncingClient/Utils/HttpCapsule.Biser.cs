@@ -7,12 +7,16 @@ namespace EntitySyncingClient
 {
     public partial class HttpCapsule : Biser.IEncoder
     {
+
+
         public Biser.Encoder BiserEncoder(Biser.Encoder existingEncoder = null)
         {
             Biser.Encoder encoder = new Biser.Encoder(existingEncoder);
 
 
-            encoder.Add(Type);
+            encoder.Add(Action);
+            encoder.Add(EntityType);
+            encoder.Add(IsOk);
             encoder.Add(Body);
 
             return encoder;
@@ -40,7 +44,9 @@ namespace EntitySyncingClient
 
 
 
-            m.Type = decoder.GetString();
+            m.Action = decoder.GetString();
+            m.EntityType = decoder.GetString();
+            m.IsOk = decoder.GetBool();
             m.Body = decoder.GetByteArray();
 
 

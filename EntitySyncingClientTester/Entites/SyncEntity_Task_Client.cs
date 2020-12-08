@@ -30,8 +30,8 @@ namespace EntitySyncingClientTester
 
         }
 
-        public override void OnInsertEntity(Entity_Task entity, Entity_Task oldEntity, byte[] nonDeserializedEntity)
-        {   
+        public override void OnInsertEntity(Entity_Task entity, Entity_Task oldEntity, byte[] nonDeserializedEntity, long changedID)
+        {
 
             //That must be set first
             this.ptrContent = tran.InsertDataBlockWithFixedAddress(this.entityTable, this.ptrContent, entity); //Entity is stored in the same table                        

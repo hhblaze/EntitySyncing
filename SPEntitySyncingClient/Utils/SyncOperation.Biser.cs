@@ -15,7 +15,7 @@ namespace EntitySyncingClient
 
             encoder.Add(SyncTimestamp);
             encoder.Add(SerializedObject);
-            encoder.Add(Operation);
+            encoder.Add((int)Operation);
             encoder.Add(Type);
             encoder.Add(InternalId);
             encoder.Add(ExternalId);
@@ -47,7 +47,7 @@ namespace EntitySyncingClient
 
             m.SyncTimestamp = decoder.GetLong();
             m.SerializedObject = decoder.GetByteArray();
-            m.Operation = decoder.GetInt();
+            m.Operation = (eOperation)decoder.GetInt();
             m.Type = decoder.GetString();
             m.InternalId = decoder.GetLong();
             m.ExternalId = decoder.GetLong();

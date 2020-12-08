@@ -100,13 +100,24 @@ namespace EntitySyncingClientTester
 
             //Emulating server received that data on specified url:
 
+            
+
+            //Here can be connected to the server APP user session check, if it fails we have to return 
+            bool userAuthFailed = false;
+
+            if(userAuthFailed)
+            {
+                return SyncEngine.GetAuthFailed();
+            }
+
             byte[] returnData = null; //This should be returned back to the client as a httpResponse.Content 
 
-            var payload = SyncEngine.GetPayload(data);        //data from POST    
+            var payload = SyncEngine.GetPayload(data);        //data from POST to be supplied later to the SyncEngine   
             switch (SyncEngine.GetEntity4Sync(payload))       //analyzing which entity came for synchronization
             {
                 case "EntitySyncingClientTester.Entity_Task":
 
+                    
                     //Choosing Syncing strategy, instantiating new entity handler
                     returnData = SyncEngine.SyncEntityStrategyV1(payload, new SyncEntity_Task_Server()
                     {
@@ -532,8 +543,9 @@ namespace EntitySyncingClientTester
 
         private void button14_Click(object sender, EventArgs e)
         {
-            return;
-            var resbof = BiserObjectify.Generator.Run(typeof(EntitySyncing.ExchangeData), true,
+           return;
+
+            var resbof = BiserObjectify.Generator.Run(typeof(EntitySyncing.HttpCapsule), true,
      @"H:\c\tmp\synchronizer\", forBiserBinary: true, forBiserJson: false, null);
 
             
