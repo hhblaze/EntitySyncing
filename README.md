@@ -1,6 +1,7 @@
 # EntitySyncing
 
 ![Image of Build](https://img.shields.io/badge/Roadmap-completed-33CC33.svg)
+[![Image of Build](https://img.shields.io/badge/License-BSD%203,%20FOSS-FC0574.svg)](https://github.com/hhblaze/EntitySyncing/blob/main/LICENSE)
 [![NuGet Badge](https://buildstats.info/nuget/EntitySyncingServer)](https://www.nuget.org/packages/EntitySyncingServer/)
 [![NuGet Badge](https://buildstats.info/nuget/EntitySyncingClient)](https://www.nuget.org/packages/EntitySyncingClient/)
 [![Image of Build](https://img.shields.io/badge/Powered%20by-tiesky.com-1883F5.svg)](https://tiesky.com)
@@ -20,7 +21,7 @@ there are <a href = 'https://github.com/hhblaze/EntitySyncing/tree/main/EntitySy
 
 Synchronization is always initiated from the client.
 
-Entities can be synchronized in one of the directions: both, from the client, from the server.
+Entities can be synchronized in one of the folowing directions: both, from the client, from the server.
 
 <a href = 'https://docs.google.com/document/d/e/2PACX-1vR6sGM_HdMu_Wl-7n6FH3FvIowZWojxHfjxNBEg_BgHzU2XQCbI3jodugHFJ1SK-nowJGkVbkRwAisL/pub'  target='_blank'>Documentation is available here</a> 
 
