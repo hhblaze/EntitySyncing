@@ -22,6 +22,8 @@ namespace EntitySyncing
         public Func<object, byte[]> Serialize = null;
         public Func<byte[], Type, object> Deserialize = null;
 
+        public int LimitationOfEntitesPerRound = 10000;
+
         /// <summary>
         /// 
         /// </summary>
@@ -113,7 +115,7 @@ namespace EntitySyncing
                 var dataEx = ExchangeData.BiserDecode(capsIn.Body);
 
 
-                int limitationOfEntitesPerRound = 10000;
+                
                 bool repeatSynchro = false;
                 T newEntity;
                 T existingEntity;
@@ -295,7 +297,7 @@ namespace EntitySyncing
                             true
                             ))
                         {
-                            if (srvSyncList.Count >= limitationOfEntitesPerRound)
+                            if (srvSyncList.Count >= LimitationOfEntitesPerRound)
                             {
                                 repeatSynchro = true;
                                 break;
@@ -337,11 +339,22 @@ namespace EntitySyncing
                         }
                     }
 
-                    entitySync.BeforeCommit();
+                    try
+                    {
+                        entitySync.BeforeCommit();
+                    }
+                    catch{}
+
+                    
                     tran.Commit();
                 }//eo using
 
-                entitySync.AfterCommit();
+                try
+                {
+                    entitySync.AfterCommit();
+                }
+                catch { }
+                
 
                 var toClient = new ExchangeData()
                 {
