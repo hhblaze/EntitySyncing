@@ -69,7 +69,7 @@ namespace EntitySyncingClient
                     new byte[] { SyncLog }.ConcatMany(long.MaxValue.To_8_bytes_array_BigEndian(), long.MaxValue.To_8_bytes_array_BigEndian()),
                     true))
             {
-                if (changedEntities.Count > LimitationOfEntitesPerRound)
+                if (changedEntities.Count > _entitySync.LimitationOfEntitesPerRound)
                 {
                     repeatSync = true;
                     break;

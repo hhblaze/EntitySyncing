@@ -75,13 +75,15 @@ namespace EntitySyncingClientTester
                 urlSync = "/modules.http.GM_PersonalDevice/IDT_Actions", 
                 entityTable = "Task1",
                 //entityContentTable  - set up when necessary, DBreeze table for the Entity content differs from table with indexes
+                LimitationOfEntitesPerRound = 1000
             });
 
             SyncEngineClient2.AddEntity4Sync<Entity_Task>(new SyncEntity_Task_Client()
             {
                 urlSync = "/modules.http.GM_PersonalDevice/IDT_Actions",
-                entityTable = "Task1"
+                entityTable = "Task1",
                 //entityContentTable  - set up when necessary, DBreeze table for the Entity content differs from table with indexes
+                LimitationOfEntitesPerRound = 1000
             });
 
         }

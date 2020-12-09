@@ -10,7 +10,7 @@ namespace EntitySyncingClient
     {
         protected long _newLocalSyncTimeStamp;
 
-        protected const int LimitationOfEntitesPerRound = 100;    // can send no more than this number of entities to server in one request
+        
 
         public SyncStrategy()
         {

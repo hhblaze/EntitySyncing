@@ -44,6 +44,11 @@ namespace EntitySyncingClient
         public EntitySyncingClient.Engine SyncingEngine = null;
 
         /// <summary>
+        /// Default is 10000. Quantity of entites that must be synchronized per one SendToServer call.
+        /// </summary>
+        public int LimitationOfEntitesPerRound = 10000;    
+
+        /// <summary>
         /// Chooses between entityContentTable and entityTable
         /// </summary>
         public string GetEntityContentTable

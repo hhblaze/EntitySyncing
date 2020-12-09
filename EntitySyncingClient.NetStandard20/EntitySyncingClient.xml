@@ -63,6 +63,11 @@
             In case if value of the entity differs from the table where synchronizer holds data (refToValueDataBlockWithFixedAddress)
             </summary>
         </member>
+        <member name="F:EntitySyncingClient.EntitySyncingBaseV1`1.LimitationOfEntitesPerRound">
+            <summary>
+            Default is 10000. Quantity of entites that must be synchronized per one SendToServer call.
+            </summary>
+        </member>
         <member name="P:EntitySyncingClient.EntitySyncingBaseV1`1.GetEntityContentTable">
             <summary>
             Chooses between entityContentTable and entityTable
