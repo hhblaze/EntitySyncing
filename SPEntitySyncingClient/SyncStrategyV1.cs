@@ -29,7 +29,7 @@ namespace EntitySyncingClient
         /// <param name="table">Where must be stored index 200</param>
         /// <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
         /// <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
-        /// <param name="oldEntity">old instance of the entity from DB</param>
+        /// <param name="oldEntity">old instance of the entity from DB !!!MUST!!! be supplied when update or null when new entity</param>
         public static void InsertIndex4Sync(DBreeze.Transactions.Transaction tran, string table, T entity, byte[] ptrEntityContent, T oldEntity)
         {
             ISyncEntity ent = ((ISyncEntity)entity);
@@ -150,15 +150,15 @@ namespace EntitySyncingClient
                             ((ISyncEntity)oldEntity).Id = opr.ExternalId; //Theoretically on this place can be called a user-function to get another ID type
                             ((ISyncEntity)oldEntity).SyncTimestamp = ++now;  //must be returned back, overriding SyncTimeStamp                                     
 
-                            _entitySync.OnInsertEntity(oldEntity, default(T), DBreeze.Utils.CustomSerializator.ByteArraySerializator(oldEntity), opr.InternalId);
+                            _entitySync.OnInsertEntity(oldEntity, default(T), SyncEngine.Serialize(oldEntity), opr.InternalId);
 
                             InsertIndex4Sync(tran, _entitySync.entityTable, oldEntity, _entitySync.ptrContent, default(T));
 
 
                             //Setting value from the server for the existing ID (real entity that must belong to that id)
-                            _entitySync.ptrContent = rowLocalEntity.Value;                          
-
-                            _entitySync.OnInsertEntity((T)DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator(opr.SerializedObject, typeof(T)), default(T),
+                            _entitySync.ptrContent = rowLocalEntity.Value;
+                            
+                            _entitySync.OnInsertEntity((T)SyncEngine.Deserialize(opr.SerializedObject, typeof(T)), default(T),
                                 opr.SerializedObject, 0);
 
                             reRunSync = true;
@@ -180,7 +180,7 @@ namespace EntitySyncingClient
                                 _entitySync.ptrContent = rowLocalEntity.Value;
                                 localEntity = rowLocalEntity.GetDataBlockWithFixedAddress<T>();
                                 
-                                entity = (T)DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator(opr.SerializedObject, typeof(T));
+                                entity = (T)SyncEngine.Deserialize(opr.SerializedObject, typeof(T));
 
                                 if (((ISyncEntity)localEntity).SyncTimestamp < opr.SyncTimestamp)
                                 {
@@ -199,7 +199,7 @@ namespace EntitySyncingClient
                                 //Inserting new entity from server                 
                                 _entitySync.ptrContent = null;
                                // entity = opr.SerializedObject.DeserializeProtobuf<T>();
-                                entity = (T)DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator(opr.SerializedObject, typeof(T));
+                                entity = (T)SyncEngine.Deserialize(opr.SerializedObject, typeof(T));
                                 
                                 _entitySync.OnInsertEntity(entity, default(T), opr.SerializedObject, 0);
                                 InsertIndex4Sync(tran, _entitySync.entityTable, entity, _entitySync.ptrContent, default(T));

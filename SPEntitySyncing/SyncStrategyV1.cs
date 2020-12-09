@@ -19,7 +19,7 @@ namespace EntitySyncing
         /// <param name="table">Where must be stored index 200</param>
         /// <param name="entity">entity.Id and entity.SyncTimestamp must be filled up</param>
         /// <param name="ptrEntityContent">pointer to the entity content (16 bytes) gathered with DBreeze InsertDataBlockWithFixedAddress</param>
-        /// <param name="oldEntity">old instance of the entity from DB</param>
+        /// <param name="oldEntity">old instance of the entity from DB !!!MUST!!! be supplied when update or null when new entity</param>
         public static void InsertIndex4Sync(DBreeze.Transactions.Transaction tran, string table, ISyncEntity entity, byte[] ptrEntityContent, ISyncEntity oldEntity)
         {
             if (oldEntity == null)

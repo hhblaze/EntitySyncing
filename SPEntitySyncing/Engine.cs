@@ -19,13 +19,17 @@ namespace EntitySyncing
     {
         internal DBreezeEngine DBEngine = null;
 
+        public Func<object, byte[]> Serialize = null;
+        public Func<byte[], Type, object> Deserialize = null;
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="dbEngine"></param>
-        /// <param name="logger">can be null</param>
-        /// <param name=""></param>
-        public Engine(DBreeze.DBreezeEngine dbEngine, ILogger logger)
+        /// <param name="logger"></param>
+        /// <param name="byteArraySerializer">can be null then DBreeze embedded serializer will be used</param>
+        /// <param name="byteArrayDeSerializer">can be null then DBreeze embedded deserializer will be used</param>
+        public Engine(DBreeze.DBreezeEngine dbEngine, ILogger logger, Func<object, byte[]> byteArraySerializer = null, Func<byte[], Type, object> byteArrayDeSerializer = null)
         {
             if (logger == null)
                 Logger.log = new LoggerWrapper();
@@ -38,10 +42,26 @@ namespace EntitySyncing
                 return;
             }
 
-            if (DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator == null || DBreeze.Utils.CustomSerializator.ByteArraySerializator == null)
+            if((byteArraySerializer != null && byteArrayDeSerializer == null) || (byteArraySerializer != null && byteArrayDeSerializer == null))
+                throw new Exception("EntitySyncing.Engine.Init: please supply both ByteArrayDeSerializator and ByteArraySerializator");
+
+            if(byteArraySerializer == null && byteArrayDeSerializer == null)
             {
-                throw new Exception("EntitySyncing.Engine.Init: please supply for the DBreeze DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator && DBreeze.Utils.CustomSerializator.ByteArraySerializator");
+                //Trying to use DBreeze serializers
+                if (DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator == null || DBreeze.Utils.CustomSerializator.ByteArraySerializator == null)
+                {
+                    throw new Exception("EntitySyncing.Engine.Init: please supply both ByteArrayDeSerializator and ByteArraySerializator or embed serializers to DBreeze");
+                }
+
+                this.Serialize = DBreeze.Utils.CustomSerializator.ByteArraySerializator;
+                this.Deserialize = DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator;
             }
+            else
+            {
+                this.Serialize = byteArraySerializer;
+                this.Deserialize = byteArrayDeSerializer;
+            }
+
 
             DBEngine = dbEngine;
         }
@@ -164,7 +184,7 @@ namespace EntitySyncing
                                             //We must update server side and put into entityLog
                                             //We don't return back this entity
 
-                                            newEntity = (T)DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator(row.SerializedObject, typeof(T));
+                                            newEntity = (T)Deserialize(row.SerializedObject, typeof(T));
                                             //newEntity = row.SerializedObject.DeserializeProtobuf<T>();
 
                                             ((ISyncEntity)newEntity).Id = row.InternalId; //just for a case
@@ -204,7 +224,7 @@ namespace EntitySyncing
 
                                         //Insert new 
                                         //newEntity = row.SerializedObject.DeserializeProtobuf<T>();
-                                        newEntity = (T)DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator(row.SerializedObject, typeof(T));
+                                        newEntity = (T)Deserialize(row.SerializedObject, typeof(T));
 
 
                                         entitySync.ptrContent = null;
