@@ -144,16 +144,22 @@ namespace EntitySyncingClient
                         {
                             var oldEntity = rowLocalEntity.GetDataBlockWithFixedAddress<T>();
 
-                            //Setting value from the server to this ID (real entity that must belong to that id)
-                            tran.InsertDataBlockWithFixedAddress<byte[]>(_entitySync.GetEntityContentTable, rowLocalEntity.Value, opr.SerializedObject);
-                            
+                            _entitySync.ptrContent = null;
+
                             //New GeneratedID must be stored for the new sync
                             ((ISyncEntity)oldEntity).Id = opr.ExternalId; //Theoretically on this place can be called a user-function to get another ID type
-                            ((ISyncEntity)oldEntity).SyncTimestamp = ++now;  //must be returned back, overriding SyncTimeStamp         
-                            
+                            ((ISyncEntity)oldEntity).SyncTimestamp = ++now;  //must be returned back, overriding SyncTimeStamp                                     
+
                             _entitySync.OnInsertEntity(oldEntity, default(T), DBreeze.Utils.CustomSerializator.ByteArraySerializator(oldEntity), opr.InternalId);
 
                             InsertIndex4Sync(tran, _entitySync.entityTable, oldEntity, _entitySync.ptrContent, default(T));
+
+
+                            //Setting value from the server for the existing ID (real entity that must belong to that id)
+                            _entitySync.ptrContent = rowLocalEntity.Value;                          
+
+                            _entitySync.OnInsertEntity((T)DBreeze.Utils.CustomSerializator.ByteArrayDeSerializator(opr.SerializedObject, typeof(T)), default(T),
+                                opr.SerializedObject, 0);
 
                             reRunSync = true;
                         }
